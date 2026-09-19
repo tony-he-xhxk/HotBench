@@ -61,13 +61,6 @@ python -m http.server 8080
 # 然后打开 http://localhost:8080/
 ```
 
-## 部署
+## LICENSE
 
-推到 `main` 分支后，在 GitHub 仓库 `Settings → Pages` 把 Source 设为
-`Deploy from a branch` → `main` / `/ (root)`。
-
-自定义域名已经写在 `CNAME` 里（`hotbench.xingheling.cn`），DNS 侧再加一条记录：
-
-| 类型 | 主机记录 | 记录值 |
-| --- | --- | --- |
-| CNAME | hotbench | `<你的用户名>.github.io` |
+MIT
