@@ -1,0 +1,25 @@
+# ===== 操作系统 =====
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+
+# ===== 编辑器 / IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== 本地草稿与临时文件 =====
+work/
+tmp/
+*.log
+*.bak
+*.local.html
+
+# ===== 依赖（当前站点无需构建，仅备将来使用）=====
+node_modules/
+
+# ===== 本地预览用的服务脚本 =====
+serve.*

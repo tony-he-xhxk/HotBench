@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HotBench · 有趣的benchmark 实测</title>
+  <meta name="description" content="HotBench：把同一个 prompt 交给不同的 AI 模型与 Harness，看看它们各自能做出什么。">
+  <link rel="canonical" href="https://hotbench.xingheling.cn/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%232bb3a6'/%3E%3Ctext x='32' y='44' font-family='system-ui,-apple-system,sans-serif' font-size='34' font-weight='700' fill='%23ffffff' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="./">Hot<span>Bench</span></a>
+      <div class="nav-links">
+        <a href="https://xingheling.cn/">个人主页</a>
+        <a id="nav-repo" href="#" target="_blank" rel="noopener" hidden>GitHub</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+
+    <section class="hero">
+      <h1 class="hero-title">HotBench <span class="hero-sep">·</span> 有趣的benchmark 实测</h1>
+      <p class="hero-desc">同一个 prompt，交给不同的 AI 模型与 Harness，看看它们各自能做出什么。</p>
+      <p class="hero-note" id="hero-note"></p>
+    </section>
+
+    <div id="projects" class="projects"></div>
+
+    <noscript>
+      <p class="empty-tip">本页需要 JavaScript 才能加载 benchmark 数据与动态预览。</p>
+    </noscript>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a id="foot-home" href="https://xingheling.cn/">星河岭</a>
+      <span class="foot-sep">·</span>
+      <a id="foot-repo" href="#" target="_blank" rel="noopener" hidden>GitHub</a>
+      <span class="foot-sep">·</span>
+      <span>hotbench.xingheling.cn</span>
+    </p>
+    <p class="foot-note">所有预览都在页面里实时运行，点开可放大观看。</p>
+  </footer>
+
+  <div class="lightbox" id="lightbox" hidden>
+    <div class="lightbox-backdrop" data-close></div>
+    <div class="lightbox-panel" role="dialog" aria-modal="true" aria-labelledby="lightbox-title">
+      <div class="lightbox-bar">
+        <p class="lightbox-title" id="lightbox-title"></p>
+        <div class="lightbox-actions">
+          <a class="lb-btn" id="lightbox-open" href="#" target="_blank" rel="noopener">在新标签页打开</a>
+          <button class="lb-btn lb-btn-close" id="lightbox-close" type="button" aria-label="关闭">✕</button>
+        </div>
+      </div>
+      <div class="lightbox-body" id="lightbox-body"></div>
+    </div>
+  </div>
+
+  <script src="data/projects.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
