@@ -193,12 +193,29 @@ button { font-family: inherit; }
   white-space: pre-wrap;
   word-break: break-word;
 }
-.prompt-src {
-  margin-top: 8px;
+
+/* 评语 */
+.comment-box {
+  margin-top: 20px;
+  background: #f0fffd;
+  border: 1px solid #cdeeea;
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+.comment-label {
   font-size: 12px;
-  color: var(--muted);
-  font-family: Consolas, Menlo, "Courier New", monospace;
-  word-break: break-all;
+  font-weight: 700;
+  color: var(--accent-dark);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.comment-text {
+  font-size: 14.5px;
+  line-height: 1.85;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* ===== 分组 ===== */
@@ -330,9 +347,20 @@ button { font-family: inherit; }
   color: var(--muted);
   font-size: 13px;
 }
-.site-footer p + p { margin-top: 6px; }
-.foot-sep { margin: 0 8px; color: var(--border); }
-.foot-note { font-size: 12px; }
+.foot-line { display: inline-flex; align-items: center; }
+.foot-name { color: var(--muted); }
+.foot-sep { color: var(--muted); }
+.footer-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color .2s ease;
+}
+.footer-github:hover { color: var(--accent); text-decoration: none; }
+.footer-github .octocat { transition: transform .2s ease; }
+.footer-github:hover .octocat { transform: scale(1.15); }
 
 /* ===== 放大查看 ===== */
 .lightbox {

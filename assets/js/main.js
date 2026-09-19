@@ -21,7 +21,7 @@
     heroNote: document.getElementById('hero-note'),
     navRepo: document.getElementById('nav-repo'),
     footRepo: document.getElementById('foot-repo'),
-    footHome: document.getElementById('foot-home'),
+    footGithubWrap: document.getElementById('foot-github-wrap'),
     lightbox: document.getElementById('lightbox'),
     lbBody: document.getElementById('lightbox-body'),
     lbTitle: document.getElementById('lightbox-title'),
@@ -175,10 +175,15 @@
       promptBox = '<details class="prompt-box">' +
         '<summary>查看原始 prompt</summary>' +
         '<p class="prompt-text">' + escapeHtml(project.prompt) + '</p>' +
-        (project.promptSource
-          ? '<p class="prompt-src">' + escapeHtml(project.promptSource) + '</p>'
-          : '') +
       '</details>';
+    }
+
+    var commentBox = '';
+    if (project.comment) {
+      commentBox = '<section class="comment-box">' +
+        '<p class="comment-label">评语</p>' +
+        '<p class="comment-text">' + escapeHtml(project.comment) + '</p>' +
+      '</section>';
     }
 
     var node = document.createElement('article');
@@ -203,7 +208,8 @@
         '</div>' +
       '</div>' +
       promptBox +
-      '<div class="groups"></div>';
+      '<div class="groups"></div>' +
+      commentBox;
 
     var groupsBox = node.querySelector('.groups');
     var select = node.querySelector('.mode-select');
@@ -290,8 +296,8 @@
         link.setAttribute('href', repo);
         link.hidden = false;
       });
+      if (el.footGithubWrap) el.footGithubWrap.hidden = false;
     }
-    if (SITE.homepage && el.footHome) el.footHome.setAttribute('href', SITE.homepage);
 
     if (!PROJECTS.length) {
       el.projects.innerHTML = '<p class="empty-tip">还没有 benchmark 数据，' +

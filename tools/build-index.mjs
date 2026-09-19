@@ -4,6 +4,7 @@
 
    目录约定：
      <project>/<project>.prompt.txt                        该 benchmark 的原始 prompt
+     <project>/<project>.comment.txt                       该 benchmark 的评语（可选）
      <project>/<project>.<model>.<harness>.<attempt>/      一次实测（内含同名 .html）
 
    说明：model 字段允许包含点号（例如 gpt-5.6-luna），脚本从右往左解析：
@@ -14,8 +15,8 @@
      node tools/build-index.mjs --root D:\HotBench      # 指定仓库根目录
      node tools/build-index.mjs --out data/projects.js  # 指定输出文件
 
-   已有的人工字段（site、labels、各项目的 title / summary / prompt、每次实测的 note）
-   在重新生成时会被保留。
+   prompt 与 comment 每次都以同名的 txt 文件为准；site、labels、各项目的
+   title / summary、每次实测的 note 属于人工字段，重新生成时会被保留。
    ============================================================ */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -100,6 +101,14 @@ function findPrompt(projectDir, projectId) {
   return found ? join(projectDir, found) : null;
 }
 
+function findComment(projectDir, projectId) {
+  const preferred = join(projectDir, projectId + '.comment.txt');
+  if (existsSync(preferred)) return preferred;
+  const found = readdirSync(projectDir)
+    .find((name) => name.toLowerCase().endsWith('.comment.txt'));
+  return found ? join(projectDir, found) : null;
+}
+
 function findHtml(runDir, runName) {
   const preferred = join(runDir, runName + '.html');
   if (existsSync(preferred)) return preferred;
@@ -174,16 +183,15 @@ function scan() {
       });
 
       const promptFile = findPrompt(projectDir, projectId);
+      const commentFile = findComment(projectDir, projectId);
       if (!runs.length && !promptFile) return;
 
       projects.push({
         id: projectId,
         title: old.title || projectId,
         summary: old.summary || '',
-        prompt: old.prompt !== undefined
-          ? old.prompt
-          : (promptFile ? readFileSync(promptFile, 'utf8').trim() : ''),
-        promptSource: promptFile ? toUrl(promptFile) : (old.promptSource || ''),
+        prompt: promptFile ? readFileSync(promptFile, 'utf8').trim() : (old.prompt || ''),
+        comment: commentFile ? readFileSync(commentFile, 'utf8').trim() : (old.comment || ''),
         runs: runs
       });
     });
@@ -214,7 +222,8 @@ function main() {
 
   const body =
     '/* 由 tools/build-index.mjs 自动生成。\n' +
-    ' * 重新生成时会保留：site、labels、各项目的 title / summary / prompt、runs[].note。\n' +
+    ' * prompt / comment 取自各项目下的同名 txt 文件；\n' +
+    ' * 重新生成时会保留：site、labels、各项目的 title / summary、runs[].note。\n' +
     ' * 新增实测后执行：node tools/build-index.mjs\n' +
     ' */\n' +
     'window.HOTBENCH_DATA = ' + JSON.stringify(data, null, 2) + ';\n';
