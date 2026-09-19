@@ -15,6 +15,7 @@
   /* 预览用的固定视口（与 style.css 里 .shot 的 1280 / 1000 对应），再等比缩放到卡片大小 */
   var FRAME_W = 1280;
   var FRAME_H = 1000;
+  var FRAME_MIN_H = 520;
 
   var el = {
     projects: document.getElementById('projects'),
@@ -154,7 +155,6 @@
     });
 
     container.innerHTML = html || '<p class="empty-tip">这个 benchmark 还没有实测结果。</p>';
-    loadFrames(container);
   }
 
   function buildProject(project) {
@@ -220,6 +220,7 @@
     select.addEventListener('change', function () {
       rememberMode(select.value);
       renderGroups(groupsBox, project, select.value);
+      loadFrames(groupsBox);
     });
 
     return node;
@@ -227,12 +228,66 @@
 
   /* ---------- iframe 懒加载（滚到附近才运行动画） ---------- */
 
+  /* 量出页面自身需要的高度（body.scrollHeight）。内容比视口矮的页面，
+     比如 body 用 min-height:100% 时内容会贴着顶部、下面留一大片背景色，
+     量出来之后把视口裁到内容高度并垂直居中，卡片里就不会出现一大条空白。
+     用 body 而不是 documentElement：后者对 height:100% 的页面永远等于视口高度。
+     量不到（file:// 下 iframe 不同源）就沿用固定视口。 */
+  function measurePageHeight(frame) {
+    try {
+      var doc = frame.contentDocument;
+      if (!doc) return 0;
+      var height = doc.body ? doc.body.scrollHeight : 0;
+      if (!height && doc.documentElement) height = doc.documentElement.scrollHeight;
+      return height || 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  function pageBackground(frame) {
+    try {
+      var color = frame.contentWindow.getComputedStyle(frame.contentDocument.body).backgroundColor;
+      if (color && color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') return color;
+    } catch (error) { /* 忽略 */ }
+    return '';
+  }
+
+  function frameHeight(frame) {
+    var value = Number(frame.getAttribute('data-frame-height'));
+    if (!value || !isFinite(value)) return FRAME_H;
+    return Math.max(FRAME_MIN_H, Math.min(FRAME_H, value));
+  }
+
   function fitShot(box) {
     var frame = box.querySelector('.shot-frame');
     if (!frame || !box.clientWidth) return;
+    var scale = box.clientWidth / FRAME_W;
+    var height = frameHeight(frame);
+    var offset = Math.max(0, (box.clientHeight - height * scale) / 2);
     frame.style.width = FRAME_W + 'px';
-    frame.style.height = FRAME_H + 'px';
-    frame.style.transform = 'scale(' + (box.clientWidth / FRAME_W) + ')';
+    frame.style.height = height + 'px';
+    frame.style.transform = 'translateY(' + offset + 'px) scale(' + scale + ')';
+  }
+
+  /* iframe 载入后：量高度、取背景色、重新摆放 */
+  function tuneFrame(frame, box) {
+    var height = measurePageHeight(frame);
+    if (height) frame.setAttribute('data-frame-height', String(height));
+
+    var background = pageBackground(frame);
+    if (background) box.style.background = background;
+
+    fitShot(box);
+
+    /* 少数页面布局晚一拍才稳定，再量一次（只补大，不缩小） */
+    window.setTimeout(function () {
+      var again = measurePageHeight(frame);
+      if (again > frameHeight(frame) + 8 && again <= FRAME_H) {
+        frame.setAttribute('data-frame-height', String(again));
+        fitShot(box);
+      }
+    }, 800);
   }
 
   /* 卡片尺寸变化时重新等比缩放预览 */
@@ -263,6 +318,7 @@
 
       var frame = box.querySelector('.shot-frame');
       if (!frame) return;
+      frame.addEventListener('load', function () { tuneFrame(frame, box); });
       if (observer) observer.observe(frame);
       else frame.setAttribute('src', frame.getAttribute('data-src'));
     });
@@ -306,7 +362,10 @@
     }
 
     PROJECTS.forEach(function (project) {
-      el.projects.appendChild(buildProject(project));
+      var node = buildProject(project);
+      el.projects.appendChild(node);
+      /* 必须挂到页面上再测量：脱开的节点宽度为 0，iframe 会按默认尺寸加载 */
+      loadFrames(node);
     });
 
     var totalRuns = 0;

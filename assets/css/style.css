@@ -277,7 +277,9 @@ button { font-family: inherit; }
   position: absolute;
   top: 0;
   left: 0;
-  /* 宽高由 main.js 按固定视口设置，再等比缩放到卡片大小 */
+  /* 默认固定视口；短页面由 main.js 按量到的高度覆写，再等比缩放到卡片大小 */
+  width: 1280px;
+  height: 1000px;
   border: 0;
   display: block;
   background: #fff;
