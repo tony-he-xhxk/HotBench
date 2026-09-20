@@ -302,6 +302,15 @@ button { font-family: inherit; }
   align-items: flex-end;
   justify-content: flex-end;
 }
+.shot-link { display: block; }
+.shot-link:hover { text-decoration: none; }
+.shot-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: top center;
+}
 .shot-zoom {
   margin: 10px;
   font-size: 12px;
@@ -314,7 +323,10 @@ button { font-family: inherit; }
   transition: opacity .2s ease, transform .2s ease;
 }
 .preview:hover .shot-zoom,
-.shot-mask:focus-visible .shot-zoom { opacity: 1; transform: translateY(0); }
+.shot-mask:focus-visible .shot-zoom,
+.shot-link:focus-visible .shot-zoom { opacity: 1; transform: translateY(0); }
+.shot-link .shot-zoom { position: absolute; right: 0; bottom: 0; }
+.shot-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .shot-mask:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 .preview-cap {

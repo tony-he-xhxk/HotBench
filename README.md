@@ -16,7 +16,8 @@
 ├── <benchmark>.comment.txt            评语（可选）
 ├── <benchmark>.status.json            状态标签表（可选）
 └── <benchmark>.<model>.<harness>.<n>/ 一次实测
-    └── <benchmark>.<model>.<harness>.<n>.html
+    ├── <benchmark>.<model>.<harness>.<n>.html
+    └── <benchmark>.<model>.<harness>.<n>.png   初始界面截图（可选）
 
         │  tools/build-index.mjs   扫描目录、解析文件夹名、读三个文本文件
         ▼
@@ -35,6 +36,7 @@
 | `assets/js/main.js` | 读数据、分组、懒加载预览、放大查看 |
 | `data/projects.js` | 数据文件，由脚本生成（可手工微调） |
 | `tools/build-index.mjs` | 扫描目录生成数据文件 |
+| `tools/snapshot.mjs` | 给实测 HTML 拍初始界面截图，供截图型卡片使用 |
 | `CNAME` | GitHub Pages 自定义域名 |
 
 几处实现细节：
@@ -45,6 +47,8 @@
   `file://` 下 iframe 不同源、量不到高度时会退回固定视口。
 - **懒加载**：`IntersectionObserver` 让预览滚到附近才真正加载，避免一屏之外的动画空转。
 - **放大**：点预览弹出大图（同一份 HTML 再开一个 iframe 实时运行），带「在新标签页打开」，Esc 或点背景关闭。
+- **截图型实测**：实测文件夹里放了同名 png 时，卡片改显示这张截图，点击直接在新标签页打开 HTML（不跑 iframe、
+  也没有放大）。适合「打开就能玩」的小游戏这类不适合内嵌的页面，用 `node tools/snapshot.mjs <html>` 生成截图。
 - **分组**：每个项目一个下拉框，可在「按 Model 显示 / 按 Harness 显示」之间切换，选择记在 localStorage 里。
 
 ## 命名约定
@@ -96,14 +100,16 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
 2. 放入 `新benchmark名.prompt.txt`（页面上会折叠展示）；
 3. 可选：放入 `新benchmark名.comment.txt` 写评语、`新benchmark名.status.json` 写每次实测的状态标签；
 4. 把每次实测的 HTML 按上面的命名约定放进去；
-5. 生成数据文件：
+5. 可选：想用截图卡片就在实测文件夹里放一张同名 png（比例建议与卡片一致：1280×1000 或 900×703），
+   直接跑 `node tools/snapshot.mjs <那个 html>` 生成即可；
+6. 生成数据文件：
 
    ```bash
    node tools/build-index.mjs
    ```
 
-6. 想改显示名（例如把 `deepseek-v41-flash` 显示成 `deepseek-v4.1-flash`），
-   直接改 `data/projects.js` 里的 `labels`，之后重新生成不会被覆盖。
+7. 想改显示名（例如把 `deepseek-v41-flash` 显示成 `deepseek-v4.1-flash`），
+  直接改 `data/projects.js` 里的 `labels`，之后重新生成不会被覆盖。
 
 ## 本地预览
 

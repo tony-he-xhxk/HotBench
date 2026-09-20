@@ -133,9 +133,15 @@
 
   function previewCard(item) {
     var run = item.run;
-    return '' +
-      '<figure class="preview">' +
-        '<div class="shot">' +
+    /* 有截图就展示截图，点击在新标签页打开；没有就实时预览 + 点击放大 */
+    var stage = run.shot
+      ? '<a class="shot shot-link" href="' + escapeHtml(run.file) + '" target="_blank" rel="noopener" ' +
+          'aria-label="在新标签页打开 ' + escapeHtml(item.title) + '">' +
+          '<img class="shot-img" src="' + escapeHtml(run.shot) + '" alt="' + escapeHtml(item.title) +
+            '" loading="lazy" decoding="async">' +
+          '<span class="shot-zoom">在新标签页打开</span>' +
+        '</a>'
+      : '<div class="shot">' +
           '<iframe class="shot-frame" data-src="' + escapeHtml(run.file) + '" title="' +
             escapeHtml(item.title) + '" scrolling="no" loading="lazy"></iframe>' +
           '<button class="shot-mask" type="button" data-file="' + escapeHtml(run.file) +
@@ -143,7 +149,11 @@
             escapeHtml(item.title) + '">' +
             '<span class="shot-zoom">点击放大</span>' +
           '</button>' +
-        '</div>' +
+        '</div>';
+
+    return '' +
+      '<figure class="preview">' +
+        stage +
         '<figcaption class="preview-cap">' +
           '<span class="cap-main">' + escapeHtml(item.caption) + '</span>' +
           (item.tag ? '<span class="cap-tag">' + escapeHtml(item.tag) + '</span>' : '') +
@@ -322,12 +332,13 @@
 
   function loadFrames(scope) {
     Array.prototype.forEach.call(scope.querySelectorAll('.shot'), function (box) {
+      var frame = box.querySelector('.shot-frame');
+      if (!frame) return;   /* 截图卡片是静态图片，不需要 iframe 适配 */
+
       fitShot(box);
       if (sizeObserver) sizeObserver.observe(box);
       else window.addEventListener('resize', function () { fitShot(box); });
 
-      var frame = box.querySelector('.shot-frame');
-      if (!frame) return;
       frame.addEventListener('load', function () { tuneFrame(frame, box); });
       if (observer) observer.observe(frame);
       else frame.setAttribute('src', frame.getAttribute('data-src'));

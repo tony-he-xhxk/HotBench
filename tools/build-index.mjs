@@ -7,6 +7,8 @@
      <project>/<project>.comment.txt                       该 benchmark 的评语（可选）
      <project>/<project>.status.json                       每次实测的状态标签（可选）
      <project>/<project>.<model>.<harness>.<attempt>/      一次实测（内含同名 .html）
+                                                          里面放同名 .png 截图的话，
+                                                          卡片就显示截图、点击在新标签页打开
 
    说明：model 字段允许包含点号（例如 gpt-5.6-luna），脚本从右往左解析：
    最后一段是第几次尝试，倒数第二段是 harness，剩下的是 model。
@@ -137,6 +139,15 @@ function findHtml(runDir, runName) {
   return found ? join(runDir, found) : null;
 }
 
+/* 实测文件夹里放了截图（同名 png/jpg/webp）就用截图卡片，否则实时预览 iframe */
+function findShot(runDir, runName) {
+  const preferred = join(runDir, runName + '.png');
+  if (existsSync(preferred)) return preferred;
+  const found = readdirSync(runDir, { withFileTypes: true })
+    .find((entry) => entry.isFile() && /\.(png|jpe?g|webp)$/i.test(entry.name));
+  return found ? join(runDir, found.name) : null;
+}
+
 function parseRunDir(projectId, dirName) {
   if (!dirName.startsWith(projectId + '.')) return null;
   const parts = dirName.slice(projectId.length + 1).split('.');
@@ -178,13 +189,16 @@ function scan() {
           console.warn('! 跳过（目录里没有 html）：' + dirName);
           return;
         }
-        runs.push({
+        const shot = findShot(join(projectDir, dirName), dirName);
+        const run = {
           id: parsed.model + '.' + parsed.harness + '.' + parsed.attempt,
           model: parsed.model,
           harness: parsed.harness,
           attempt: parsed.attempt,
           file: toUrl(html)
-        });
+        };
+        if (shot) run.shot = toUrl(shot);
+        runs.push(run);
         if (!modelLabels[parsed.model]) modelLabels[parsed.model] = parsed.model;
         if (!harnessLabels[parsed.harness]) {
           harnessLabels[parsed.harness] = titleCase(parsed.harness);

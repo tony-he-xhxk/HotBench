@@ -93,6 +93,31 @@ window.HOTBENCH_DATA = {
           "status": "一轮通过🎉"
         }
       ]
+    },
+    {
+      "id": "snake",
+      "title": "贪吃蛇",
+      "summary": "",
+      "prompt": "写一个贪吃蛇小游戏，单文件HTML，打开即可玩。",
+      "comment": "deepseek-v4.1-flash在WorkBuddy和在Codex上均一轮通过可以玩耍。Codex上，蛇移动是一格一格跳，略微复古，但是蛇身贯通比较好看；WorkBuddy上，蛇是连续移动的，体验感稍好，但是蛇看起来一节一节，每节中间有较大空隙。",
+      "runs": [
+        {
+          "id": "deepseek-v41-flash.codex.1",
+          "model": "deepseek-v41-flash",
+          "harness": "codex",
+          "attempt": 1,
+          "file": "snake/snake.deepseek-v41-flash.codex.1/snake.deepseek-v41-flash.codex.1.html",
+          "shot": "snake/snake.deepseek-v41-flash.codex.1/snake.deepseek-v41-flash.codex.1.png"
+        },
+        {
+          "id": "deepseek-v41-flash.workbuddy.1",
+          "model": "deepseek-v41-flash",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "snake/snake.deepseek-v41-flash.workbuddy.1/snake.deepseek-v41-flash.workbuddy.1.html",
+          "shot": "snake/snake.deepseek-v41-flash.workbuddy.1/snake.deepseek-v41-flash.workbuddy.1.png"
+        }
+      ]
     }
   ]
 };
