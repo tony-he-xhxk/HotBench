@@ -35,6 +35,9 @@ window.HOTBENCH_DATA = {
       "summary": "用 SVG 画一只骑自行车的鹈鹕，纯 2D 动画。",
       "prompt": "创建一个HTML，内容是SVG，绘制一个鹈鹕骑自行车的2D动画。",
       "comment": "deepseek-v4.1-flash在WorkBuddy上第1轮惨不忍睹，这个飞出去的腿让人啼笑皆非。Codex上第1轮明显好多了，但多了一个碍眼的骑行水壶。第2轮以上两者均修复完毕。\nglm-5.3-flash在WorkBuddy上，第1轮真的笑掉大牙，这个踏板是直接飞出去了，脚也在左右摆荡，根本没在旋转。第2轮修复完毕。\nhy4-preview在WorkBuddy上，有史以来1轮通过的选手！物理没有崩坏！🎉",
+      "promptUrl": "pelican-bicycle/pelican-bicycle.prompt.txt",
+      "commentUrl": "pelican-bicycle/pelican-bicycle.comment.txt",
+      "statusUrl": "pelican-bicycle/pelican-bicycle.status.json",
       "runs": [
         {
           "id": "deepseek-v41-flash.codex.1",
@@ -99,7 +102,10 @@ window.HOTBENCH_DATA = {
       "title": "贪吃蛇",
       "summary": "",
       "prompt": "写一个贪吃蛇小游戏，单文件HTML，打开即可玩。",
-      "comment": "deepseek-v4.1-flash在WorkBuddy和在Codex上均一轮通过可以玩耍。Codex上，蛇移动是一格一格跳，略微复古，但是蛇身贯通比较好看；WorkBuddy上，蛇是连续移动的，体验感稍好，但是蛇看起来一节一节，每节中间有较大空隙。",
+      "comment": "deepseek-v4.1-flash在WorkBuddy和在Codex上均一轮通过可以玩耍。Codex上，蛇移动是一格一格跳，略微复古，但是蛇身贯通比较好看；WorkBuddy上，蛇是连续移动的，但是蛇看起来一节一节，每节中间有较大空隙，并据实测反馈，有点延迟，略微影响游戏体验。",
+      "promptUrl": "snake/snake.prompt.txt",
+      "commentUrl": "snake/snake.comment.txt",
+      "statusUrl": "",
       "runs": [
         {
           "id": "deepseek-v41-flash.codex.1",

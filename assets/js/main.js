@@ -123,11 +123,14 @@
   /* ---------- 渲染 ---------- */
 
   /* 状态标签：文字里含「通过」且不含「未 / 没 / 不」显示绿色，其余一律红色 */
+  function isPass(text) {
+    return text.indexOf('通过') !== -1 && !/[未没不]/.test(text);
+  }
+
   function statusChip(run) {
     var text = run && run.status ? String(run.status).trim() : '';
     if (!text) return '';
-    var pass = text.indexOf('通过') !== -1 && !/[未没不]/.test(text);
-    return '<span class="cap-status ' + (pass ? 'is-pass' : 'is-fail') + '">' +
+    return '<span class="cap-status ' + (isPass(text) ? 'is-pass' : 'is-fail') + '">' +
       escapeHtml(text) + '</span>';
   }
 
@@ -152,7 +155,7 @@
         '</div>';
 
     return '' +
-      '<figure class="preview">' +
+      '<figure class="preview" data-run="' + escapeHtml(run.id || '') + '">' +
         stage +
         '<figcaption class="preview-cap">' +
           '<span class="cap-main">' + escapeHtml(item.caption) + '</span>' +
@@ -243,7 +246,91 @@
       loadFrames(groupsBox);
     });
 
+    refreshProject(node, project);
+
     return node;
+  }
+
+  /* ---------- 运行时读取文本文件 ---------- */
+
+  /* prompt / 评语 / 状态标签都在页面加载后再拉一次，所以改了 txt / json 直接 push 就生效；
+     数据文件里解析出来的内容是兜底（file://、离线、或文件被删时用）。
+     用 cache: 'no-cache' 让浏览器走 304 校验：改了立刻能看到，没改也不额外下载。 */
+  function refreshText(url, apply) {
+    if (!url || typeof window.fetch !== 'function') return;
+    window.fetch(url, { cache: 'no-cache' })
+      .then(function (response) { return response.ok ? response.text() : null; })
+      .then(function (text) { if (text !== null) apply(text.trim()); })
+      .catch(function () { /* 拉不到就用数据文件里的内容 */ });
+  }
+
+  function applyPrompt(node, text) {
+    var box = node.querySelector('.prompt-box');
+    if (!text) {
+      if (box) box.remove();
+      return;
+    }
+    if (!box) {
+      box = document.createElement('details');
+      box.className = 'prompt-box';
+      box.innerHTML = '<summary>查看原始 prompt</summary><p class="prompt-text"></p>';
+      node.insertBefore(box, node.querySelector('.groups'));
+    }
+    var target = box.querySelector('.prompt-text');
+    if (target.textContent !== text) target.textContent = text;
+  }
+
+  function applyComment(node, text) {
+    var box = node.querySelector('.comment-box');
+    if (!text) {
+      if (box) box.remove();
+      return;
+    }
+    if (!box) {
+      box = document.createElement('section');
+      box.className = 'comment-box';
+      box.innerHTML = '<p class="comment-label">评语</p><p class="comment-text"></p>';
+      node.appendChild(box);
+    }
+    var target = box.querySelector('.comment-text');
+    if (target.textContent !== text) target.textContent = text;
+  }
+
+  function applyStatuses(node, projectId, map) {
+    Array.prototype.forEach.call(node.querySelectorAll('.preview[data-run]'), function (figure) {
+      var runId = figure.getAttribute('data-run');
+      var text = String(map[runId] || map[projectId + '.' + runId] || '').trim();
+      var cap = figure.querySelector('.preview-cap');
+      if (!cap) return;
+
+      var chip = cap.querySelector('.cap-status');
+      if (!text) {
+        if (chip) chip.remove();
+        return;
+      }
+      if (!chip) {
+        chip = document.createElement('span');
+        cap.appendChild(chip);
+      }
+      chip.className = 'cap-status ' + (isPass(text) ? 'is-pass' : 'is-fail');
+      if (chip.textContent !== text) chip.textContent = text;
+    });
+  }
+
+  function refreshProject(node, project) {
+    refreshText(project.promptUrl, function (text) { applyPrompt(node, text); });
+    refreshText(project.commentUrl, function (text) { applyComment(node, text); });
+
+    if (!project.statusUrl) return;
+    refreshText(project.statusUrl, function (text) {
+      var map = null;
+      try {
+        map = JSON.parse(text);
+      } catch (error) {
+        return;   /* json 写坏了就沿用数据文件里的标签 */
+      }
+      if (map && typeof map === 'object') applyStatuses(node, project.id, map);
+    });
   }
 
   /* ---------- iframe 懒加载（滚到附近才运行动画） ---------- */

@@ -236,6 +236,11 @@ function scan() {
         summary: old.summary || '',
         prompt: promptFile ? readFileSync(promptFile, 'utf8').trim() : (old.prompt || ''),
         comment: commentFile ? readFileSync(commentFile, 'utf8').trim() : (old.comment || ''),
+        /* 页面加载后会用这几个地址再拉一次，改了 txt / json 直接 push 就生效；
+           上面解析出来的内容是兜底（file://、离线、或文件被删时用） */
+        promptUrl: promptFile ? toUrl(promptFile) : '',
+        commentUrl: commentFile ? toUrl(commentFile) : '',
+        statusUrl: statusFile ? toUrl(statusFile) : '',
         runs: runs
       });
     });

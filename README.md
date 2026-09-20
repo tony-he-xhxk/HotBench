@@ -68,8 +68,10 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
 
 ## 文本文件约定
 
-每个 benchmark 文件夹下可以放三个与文件夹同名的文本文件。它们的内容每次都由
-`build-index.mjs` 重新读取，所以改了文件再跑一次脚本就能生效，不用动 `data/projects.js`：
+每个 benchmark 文件夹下可以放三个与文件夹同名的文本文件。**页面是运行时读取它们的**：
+`build-index.mjs` 会把内容和文件路径一起写进 `data/projects.js` 当兜底，前端加载后再按路径拉一次，
+所以只改内容的话直接 push 就生效，连生成脚本都不用跑；只有增删实测目录、增删这类文件或改文件夹名时，
+才需要执行 `node tools/build-index.mjs` 重新生成数据文件。
 
 | 文件 | 是否必需 | 显示位置 |
 | --- | --- | --- |
@@ -91,6 +93,7 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
   ```
 
 - 标签文字里含「通过」二字、且不含「未 / 没 / 不」的显示绿色，其余一律红色；没写标签的实测不显示标签；
+- 用 `file://` 直接打开页面时浏览器不允许 `fetch`，会退回数据文件里的内容（和预览的限制一样）；
 - 没有 `comment.txt` 就不显示评语框；
 - 页面上只展示文本内容，不显示文件路径。
 
