@@ -14,10 +14,11 @@
 <benchmark>/
 ├── <benchmark>.prompt.txt             原始 prompt
 ├── <benchmark>.comment.txt            评语（可选）
+├── <benchmark>.status.json            状态标签表（可选）
 └── <benchmark>.<model>.<harness>.<n>/ 一次实测
     └── <benchmark>.<model>.<harness>.<n>.html
 
-        │  tools/build-index.mjs   扫描目录、解析文件夹名、读两个 txt
+        │  tools/build-index.mjs   扫描目录、解析文件夹名、读三个文本文件
         ▼
    data/projects.js   { site, labels, projects[].runs[] }
         │  assets/js/main.js       分组、懒加载、放大
@@ -38,8 +39,10 @@
 
 几处实现细节：
 
-- **预览是实时运行的**：每张预览是一个 `iframe`，按 1280×1000 的固定视口渲染，再等比缩放到卡片大小。
-  所以看到的是真正的动态效果而不是截图，也不会被卡片尺寸裁掉构图。
+- **预览是实时运行的**：每张预览是一个 `iframe`，先在 1280 宽、1000 高的视口里渲染，再等比缩放到卡片大小，
+  看到的是真正的动态效果而不是截图。加载后还会量一次页面自身的内容高度，视口高度以它为准（上限 1000）
+  并垂直居中，卡片底色取该页面 body 的背景色，所以内容比视口矮的页面不会在下面留一大片空白。
+  `file://` 下 iframe 不同源、量不到高度时会退回固定视口。
 - **懒加载**：`IntersectionObserver` 让预览滚到附近才真正加载，避免一屏之外的动画空转。
 - **放大**：点预览弹出大图（同一份 HTML 再开一个 iframe 实时运行），带「在新标签页打开」，Esc 或点背景关闭。
 - **分组**：每个项目一个下拉框，可在「按 Model 显示 / 按 Harness 显示」之间切换，选择记在 localStorage 里。
@@ -61,18 +64,29 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
 
 ## 文本文件约定
 
-每个 benchmark 文件夹下可以放两个与文件夹同名的 txt。它们的内容每次都由
-`build-index.mjs` 重新读取，所以改了 txt 再跑一次脚本就能生效，不用动 `data/projects.js`：
+每个 benchmark 文件夹下可以放三个与文件夹同名的文本文件。它们的内容每次都由
+`build-index.mjs` 重新读取，所以改了文件再跑一次脚本就能生效，不用动 `data/projects.js`：
 
 | 文件 | 是否必需 | 显示位置 |
 | --- | --- | --- |
 | `<项目名>.prompt.txt` | 必需 | 项目卡片里的「查看原始 prompt」折叠区 |
 | `<项目名>.comment.txt` | 可选 | 项目卡片底部、所有实测预览之后的评语框 |
+| `<项目名>.status.json` | 可选 | 每张预览下面的状态标签，跟在「第 N 次」后面 |
 
 写法：
 
-- 都是纯文本，UTF-8 编码；
+- prompt 与评语是纯文本，UTF-8 编码；
 - 评语直接把整段话写进去即可，换行会保留，可以写成多段；
+- 状态标签表是 JSON，键是「模型.harness.第几次」，也可以写成完整的文件夹名：
+
+  ```json
+  {
+    "deepseek-v41-flash.codex.1": "多了个水壶",
+    "deepseek-v41-flash.codex.2": "完美通过"
+  }
+  ```
+
+- 标签文字里含「通过」二字、且不含「未 / 没 / 不」的显示绿色，其余一律红色；没写标签的实测不显示标签；
 - 没有 `comment.txt` 就不显示评语框；
 - 页面上只展示文本内容，不显示文件路径。
 
@@ -80,7 +94,7 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
 
 1. 在仓库根目录建文件夹 `新benchmark名/`；
 2. 放入 `新benchmark名.prompt.txt`（页面上会折叠展示）；
-3. 可选：放入 `新benchmark名.comment.txt` 写评语（显示在卡片底部）；
+3. 可选：放入 `新benchmark名.comment.txt` 写评语、`新benchmark名.status.json` 写每次实测的状态标签；
 4. 把每次实测的 HTML 按上面的命名约定放进去；
 5. 生成数据文件：
 

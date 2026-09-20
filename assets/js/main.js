@@ -122,6 +122,15 @@
 
   /* ---------- 渲染 ---------- */
 
+  /* 状态标签：文字里含「通过」且不含「未 / 没 / 不」显示绿色，其余一律红色 */
+  function statusChip(run) {
+    var text = run && run.status ? String(run.status).trim() : '';
+    if (!text) return '';
+    var pass = text.indexOf('通过') !== -1 && !/[未没不]/.test(text);
+    return '<span class="cap-status ' + (pass ? 'is-pass' : 'is-fail') + '">' +
+      escapeHtml(text) + '</span>';
+  }
+
   function previewCard(item) {
     var run = item.run;
     return '' +
@@ -138,6 +147,7 @@
         '<figcaption class="preview-cap">' +
           '<span class="cap-main">' + escapeHtml(item.caption) + '</span>' +
           (item.tag ? '<span class="cap-tag">' + escapeHtml(item.tag) + '</span>' : '') +
+          statusChip(item.run) +
         '</figcaption>' +
       '</figure>';
   }

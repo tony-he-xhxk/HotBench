@@ -334,6 +334,17 @@ button { font-family: inherit; }
   padding: 1px 9px;
 }
 
+/* 状态标签：含「通过」且不含「未 / 没 / 不」为绿色，其余为红色 */
+.cap-status {
+  font-size: 11.5px;
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 1px 9px;
+  white-space: nowrap;
+}
+.cap-status.is-pass { color: #2e7d32; background: #edf8ef; border-color: #c6e5ca; }
+.cap-status.is-fail { color: #d64545; background: #fdeeec; border-color: #f6d0cb; }
+
 /* ===== 空状态 ===== */
 .empty-tip {
   margin-top: 24px;

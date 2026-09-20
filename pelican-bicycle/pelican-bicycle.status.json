@@ -1,0 +1,10 @@
+{
+  "_说明": "键是「模型.harness.第几次」，也可以写成完整的文件夹名；标签含「通过」且不含「未/没/不」显示绿色，其余显示红色",
+  "deepseek-v41-flash.codex.1": "多了个水壶",
+  "deepseek-v41-flash.codex.2": "完美通过",
+  "deepseek-v41-flash.workbuddy.1": "鹈鹕脚飞了",
+  "deepseek-v41-flash.workbuddy.2": "完美通过",
+  "glm-5.3-flash.workbuddy.1": "踏板飞了，鹈鹕脚摆动",
+  "glm-5.3-flash.workbuddy.2": "完美通过",
+  "hy4-preview.workbuddy.1": "一轮通过🎉"
+}

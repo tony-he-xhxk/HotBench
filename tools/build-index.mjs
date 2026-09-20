@@ -5,6 +5,7 @@
    目录约定：
      <project>/<project>.prompt.txt                        该 benchmark 的原始 prompt
      <project>/<project>.comment.txt                       该 benchmark 的评语（可选）
+     <project>/<project>.status.json                       每次实测的状态标签（可选）
      <project>/<project>.<model>.<harness>.<attempt>/      一次实测（内含同名 .html）
 
    说明：model 字段允许包含点号（例如 gpt-5.6-luna），脚本从右往左解析：
@@ -15,8 +16,9 @@
      node tools/build-index.mjs --root D:\HotBench      # 指定仓库根目录
      node tools/build-index.mjs --out data/projects.js  # 指定输出文件
 
-   prompt 与 comment 每次都以同名的 txt 文件为准；site、labels、各项目的
-   title / summary、每次实测的 note 属于人工字段，重新生成时会被保留。
+   prompt / comment / status 每次都以同名文件为准（status.json 的键是
+   「模型.harness.第几次」，也可以写成完整的文件夹名）；site、labels、各项目的
+   title / summary 属于人工字段，重新生成时会被保留。
    ============================================================ */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -109,6 +111,25 @@ function findComment(projectDir, projectId) {
   return found ? join(projectDir, found) : null;
 }
 
+function findStatus(projectDir, projectId) {
+  const preferred = join(projectDir, projectId + '.status.json');
+  if (existsSync(preferred)) return preferred;
+  const found = readdirSync(projectDir)
+    .find((name) => name.toLowerCase().endsWith('.status.json'));
+  return found ? join(projectDir, found) : null;
+}
+
+/* 状态标签表：{ "模型.harness.第几次": "标签文字" } */
+function readStatus(statusFile) {
+  try {
+    const parsed = JSON.parse(readFileSync(statusFile, 'utf8'));
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (error) {
+    console.warn('! 状态文件无法解析（' + statusFile + '）：' + error.message);
+    return {};
+  }
+}
+
 function findHtml(runDir, runName) {
   const preferred = join(runDir, runName + '.html');
   if (existsSync(preferred)) return preferred;
@@ -176,14 +197,23 @@ function scan() {
         a.attempt - b.attempt
       );
 
+      const promptFile = findPrompt(projectDir, projectId);
+      const commentFile = findComment(projectDir, projectId);
+      const statusFile = findStatus(projectDir, projectId);
+      const statusMap = statusFile ? readStatus(statusFile) : {};
+
       const oldRuns = new Map(((old.runs) || []).map((run) => [run.id, run]));
       runs.forEach((run) => {
         const prev = oldRuns.get(run.id);
         if (prev && prev.note) run.note = prev.note;
+
+        /* 状态标签：优先 status.json，键可以用「模型.harness.第几次」或完整文件夹名 */
+        const status = statusFile
+          ? (statusMap[projectId + '.' + run.id] || statusMap[run.id] || '')
+          : ((prev && prev.status) || '');
+        if (status) run.status = String(status).trim();
       });
 
-      const promptFile = findPrompt(projectDir, projectId);
-      const commentFile = findComment(projectDir, projectId);
       if (!runs.length && !promptFile) return;
 
       projects.push({
