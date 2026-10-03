@@ -8,9 +8,6 @@
   'use strict';
 
   var DATA = window.HOTBENCH_DATA || {};
-  var SITE = DATA.site || {};
-  var LABELS = DATA.labels || {};
-  var PROJECTS = Array.isArray(DATA.projects) ? DATA.projects : [];
   var MODE_KEY = 'hotbench-mode';
   /* 预览用的固定视口（与 style.css 里 .shot 的 1280 / 1000 对应），再等比缩放到卡片大小 */
   var FRAME_W = 1280;
@@ -40,13 +37,17 @@
   }
 
   function modelLabel(token) {
-    var map = LABELS.models || {};
+    var map = (DATA.labels && DATA.labels.models) || {};
     return map[token] || token;
   }
 
   function harnessLabel(token) {
-    var map = LABELS.harnesses || {};
+    var map = (DATA.labels && DATA.labels.harnesses) || {};
     return map[token] || token;
+  }
+
+  function projectList() {
+    return Array.isArray(DATA.projects) ? DATA.projects : [];
   }
 
   function unique(values) {
@@ -355,18 +356,44 @@
 
   /* ---------- iframe 懒加载（滚到附近才运行动画） ---------- */
 
-  /* 量出页面自身需要的高度（body.scrollHeight）。内容比视口矮的页面，
-     比如 body 用 min-height:100% 时内容会贴着顶部、下面留一大片背景色，
-     量出来之后把视口裁到内容高度并垂直居中，卡片里就不会出现一大条空白。
-     用 body 而不是 documentElement：后者对 height:100% 的页面永远等于视口高度。
+  /* 量出页面自身需要的高度。做法是取 body 里「常规流」子元素的内容范围
+     （排除 absolute / fixed 的装饰层，它们会跟着视口长高），再加上 body 的上下 padding。
+
+     为什么不用 body.scrollHeight：body 写了 height/min-height:100% 的页面，
+     它永远等于视口高度，量不出「内容其实只有一半高、还顶在上面」这种情况。
+
+     量出来之后只有当页面自己没把内容垂直居中时才裁切（比如内容贴着顶部、
+     下面留一大片背景色）；已经居中的页面原样保留，避免把它的留白也切掉。
      量不到（file:// 下 iframe 不同源）就沿用固定视口。 */
   function measurePageHeight(frame) {
     try {
       var doc = frame.contentDocument;
-      if (!doc) return 0;
-      var height = doc.body ? doc.body.scrollHeight : 0;
-      if (!height && doc.documentElement) height = doc.documentElement.scrollHeight;
-      return height || 0;
+      if (!doc || !doc.body || !doc.defaultView) return 0;
+      var win = doc.defaultView;
+      var body = doc.body;
+      var top = Infinity;
+      var bottom = -Infinity;
+
+      Array.prototype.forEach.call(body.children, function (node) {
+        var position = win.getComputedStyle(node).position;
+        if (position === 'absolute' || position === 'fixed') return;
+        var rect = node.getBoundingClientRect();
+        if (!rect.width && !rect.height) return;
+        if (rect.top < top) top = rect.top;
+        if (rect.bottom > bottom) bottom = rect.bottom;
+      });
+
+      if (!isFinite(top) || !isFinite(bottom)) return body.scrollHeight || 0;
+
+      var style = win.getComputedStyle(body);
+      var pad = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
+      var needed = Math.ceil(bottom - top + pad);
+
+      /* 上下留白差不多 → 页面自己就是居中的，保持整屏 */
+      var viewportH = frame.clientHeight;
+      if (viewportH && Math.abs(top - (viewportH - bottom)) <= 24) return viewportH;
+
+      return needed;
     } catch (error) {
       return 0;
     }
@@ -472,8 +499,9 @@
 
   /* ---------- 启动 ---------- */
 
-  function init() {
-    var repo = SITE.repo || '';
+  function applySite() {
+    var site = DATA.site || {};
+    var repo = site.repo || '';
     if (repo) {
       [el.navRepo, el.footRepo].forEach(function (link) {
         if (!link) return;
@@ -482,14 +510,21 @@
       });
       if (el.footGithubWrap) el.footGithubWrap.hidden = false;
     }
+  }
 
-    if (!PROJECTS.length) {
+  function renderAll() {
+    var projects = projectList();
+    applySite();
+    el.projects.innerHTML = '';
+
+    if (!projects.length) {
       el.projects.innerHTML = '<p class="empty-tip">还没有 benchmark 数据，' +
         '在 <code>data/projects.js</code> 里添加即可。</p>';
+      el.heroNote.textContent = '';
       return;
     }
 
-    PROJECTS.forEach(function (project) {
+    projects.forEach(function (project) {
       var node = buildProject(project);
       el.projects.appendChild(node);
       /* 必须挂到页面上再测量：脱开的节点宽度为 0，iframe 会按默认尺寸加载 */
@@ -499,15 +534,42 @@
     var totalRuns = 0;
     var modelSet = [];
     var harnessSet = [];
-    PROJECTS.forEach(function (project) {
+    projects.forEach(function (project) {
       (project.runs || []).forEach(function (run) {
         totalRuns += 1;
         if (modelSet.indexOf(run.model) === -1) modelSet.push(run.model);
         if (harnessSet.indexOf(run.harness) === -1) harnessSet.push(run.harness);
       });
     });
-    el.heroNote.textContent = PROJECTS.length + ' 个 benchmark · ' + totalRuns + ' 次实测 · ' +
+    el.heroNote.textContent = projects.length + ' 个 benchmark · ' + totalRuns + ' 次实测 · ' +
       modelSet.length + ' 个模型 × ' + harnessSet.length + ' 个 Harness';
+  }
+
+  /* 数据文件虽然是 <script> 引入的，但它会被浏览器 / CDN 缓存 10 分钟（max-age=600），
+     刚推上去的新实测会看不见。这里再 fetch 一次做校验，真变了就整页重渲染。 */
+  function refreshData() {
+    if (typeof window.fetch !== 'function') return;
+    window.fetch('data/projects.js', { cache: 'no-cache' })
+      .then(function (response) { return response.ok ? response.text() : null; })
+      .then(function (text) {
+        if (!text) return;
+        var fresh = null;
+        try {
+          fresh = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+        } catch (error) {
+          return;
+        }
+        if (!fresh || !fresh.projects) return;
+        if (JSON.stringify(fresh) === JSON.stringify(DATA)) return;
+        DATA = fresh;
+        renderAll();
+      })
+      .catch(function () { /* 拉不到就用页面里这份 */ });
+  }
+
+  function init() {
+    renderAll();
+    refreshData();
   }
 
   /* 事件委托：点预览图放大 */
