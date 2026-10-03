@@ -14,7 +14,8 @@ window.HOTBENCH_DATA = {
     "models": {
       "deepseek-v41-flash": "deepseek-v4.1-flash",
       "glm-5.3-flash": "glm-5.3-flash",
-      "hy4-preview": "hy4-preview"
+      "hy4-preview": "hy4-preview",
+      "space-bunny": "space-bunny"
     },
     "harnesses": {
       "codex": "Codex",
@@ -102,10 +103,10 @@ window.HOTBENCH_DATA = {
       "title": "贪吃蛇",
       "summary": "",
       "prompt": "写一个贪吃蛇小游戏，单文件HTML，打开即可玩。",
-      "comment": "deepseek-v4.1-flash在WorkBuddy和在Codex上均一轮通过可以玩耍。Codex上，蛇移动是一格一格跳，略微复古，但是蛇身贯通比较好看；WorkBuddy上，蛇是连续移动的，但是蛇看起来一节一节，每节中间有较大空隙，并据实测反馈，有点延迟，略微影响游戏体验。",
+      "comment": "deepseek-v4.1-flash在WorkBuddy和在Codex上均一轮通过可以玩耍。Codex上，蛇移动是一格一格跳，略微复古，但是蛇身贯通比较好看；WorkBuddy上，蛇是连续移动的，但是蛇看起来一节一节，每节中间有较大空隙，并据实测反馈，有点延迟，略微影响游戏体验。\r\n新发的匿名大模型Space-Bunny在WorkBuddy上也接入了，试了一下，42s就交付了，这绝对是交付速度最快的模型，没有之一！！游戏的逻辑是正常的，并且没有延迟。但是这个蛇的眼睛是没画的，而且蛇身也是采用格子染色的方式得到，比较偷懒的视觉效果，感觉有点像人类程序员先跑通后优化UI的逻辑。\r\nglm-5.3-flash在WorkBuddy上的测试，游戏逻辑大致正确，并且没有延迟。蛇身也是采用格子染色的方式得到，比较偷懒的视觉效果。并且存在一个bug：UI写“按任意方向键开始”，实测按上/下键才能开始，左/右键无效。",
       "promptUrl": "snake/snake.prompt.txt",
       "commentUrl": "snake/snake.comment.txt",
-      "statusUrl": "",
+      "statusUrl": "snake/snake.status.json",
       "runs": [
         {
           "id": "deepseek-v41-flash.codex.1",
@@ -113,7 +114,9 @@ window.HOTBENCH_DATA = {
           "harness": "codex",
           "attempt": 1,
           "file": "snake/snake.deepseek-v41-flash.codex.1/snake.deepseek-v41-flash.codex.1.html",
-          "shot": "snake/snake.deepseek-v41-flash.codex.1/snake.deepseek-v41-flash.codex.1.png"
+          "shot": "snake/snake.deepseek-v41-flash.codex.1/snake.deepseek-v41-flash.codex.1.png",
+          "status": "没问题",
+          "tone": "green"
         },
         {
           "id": "deepseek-v41-flash.workbuddy.1",
@@ -121,7 +124,29 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 1,
           "file": "snake/snake.deepseek-v41-flash.workbuddy.1/snake.deepseek-v41-flash.workbuddy.1.html",
-          "shot": "snake/snake.deepseek-v41-flash.workbuddy.1/snake.deepseek-v41-flash.workbuddy.1.png"
+          "shot": "snake/snake.deepseek-v41-flash.workbuddy.1/snake.deepseek-v41-flash.workbuddy.1.png",
+          "status": "有延迟",
+          "tone": "red"
+        },
+        {
+          "id": "glm-5.3-flash.workbuddy.1",
+          "model": "glm-5.3-flash",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "snake/snake.glm-5.3-flash.workbuddy.1/snake.glm-5.3-flash.workbuddy.1.html",
+          "shot": "snake/snake.glm-5.3-flash.workbuddy.1/snake.glm-5.3-flash.workbuddy.1.png",
+          "status": "按上/下键才能开始游戏，左/右键没用",
+          "tone": "red"
+        },
+        {
+          "id": "space-bunny.workbuddy.1",
+          "model": "space-bunny",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "snake/snake.space-bunny.workbuddy.1/snake.space-bunny.workbuddy.1.html",
+          "shot": "snake/snake.space-bunny.workbuddy.1/snake.space-bunny.workbuddy.1.png",
+          "status": "没画蛇眼睛",
+          "tone": "yellow"
         }
       ]
     }

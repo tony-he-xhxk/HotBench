@@ -83,16 +83,19 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
 
 - prompt 与评语是纯文本，UTF-8 编码；
 - 评语直接把整段话写进去即可，换行会保留，可以写成多段；
-- 状态标签表是 JSON，键是「模型.harness.第几次」，也可以写成完整的文件夹名：
+- 状态标签表是 JSON，键是「模型.harness.第几次」，也可以写成完整的文件夹名。值有两种写法：
 
   ```json
   {
-    "deepseek-v41-flash.codex.1": "多了个水壶",
-    "deepseek-v41-flash.codex.2": "完美通过"
+    "deepseek-v41-flash.codex.1": "完美通过",
+    "deepseek-v41-flash.workbuddy.1": { "text": "有延迟", "color": "red" }
   }
   ```
 
-- 标签文字里含「通过」二字、且不含「未 / 没 / 不」的显示绿色，其余一律红色；没写标签的实测不显示标签；
+  - 值写成字符串时颜色自动判断：含「通过」且不含「未 / 没 / 不」为绿色，其余红色；
+  - 值写成对象时可以自己定色，`color` 可选 `green` / `red` / `yellow`；
+  - 没写标签的实测不显示标签。
+
 - 用 `file://` 直接打开页面时浏览器不允许 `fetch`，会退回数据文件里的内容（和预览的限制一样）；
 - 没有 `comment.txt` 就不显示评语框；
 - 页面上只展示文本内容，不显示文件路径。

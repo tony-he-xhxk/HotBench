@@ -121,7 +121,9 @@ function findStatus(projectDir, projectId) {
   return found ? join(projectDir, found) : null;
 }
 
-/* 状态标签表：{ "模型.harness.第几次": "标签文字" } */
+/* 状态标签表：{ "模型.harness.第几次": 标签 }
+   标签可以写成字符串（颜色按文字里有没有「通过」判断），
+   也可以写成 { "text": "标签文字", "color": "green" } 自己定色。 */
 function readStatus(statusFile) {
   try {
     const parsed = JSON.parse(readFileSync(statusFile, 'utf8'));
@@ -130,6 +132,25 @@ function readStatus(statusFile) {
     console.warn('! 状态文件无法解析（' + statusFile + '）：' + error.message);
     return {};
   }
+}
+
+function normalizeTone(value) {
+  const tone = String(value || '').trim().toLowerCase();
+  if (tone === 'green' || tone === '绿' || tone === '绿色') return 'green';
+  if (tone === 'red' || tone === '红' || tone === '红色') return 'red';
+  if (tone === 'yellow' || tone === '黄' || tone === '黄色') return 'yellow';
+  return '';
+}
+
+function normalizeStatus(value) {
+  if (value === null || value === undefined) return { text: '', tone: '' };
+  if (typeof value === 'object') {
+    return {
+      text: String(value.text || value.label || '').trim(),
+      tone: normalizeTone(value.color || value.tone)
+    };
+  }
+  return { text: String(value).trim(), tone: '' };
 }
 
 function findHtml(runDir, runName) {
@@ -222,10 +243,15 @@ function scan() {
         if (prev && prev.note) run.note = prev.note;
 
         /* 状态标签：优先 status.json，键可以用「模型.harness.第几次」或完整文件夹名 */
-        const status = statusFile
-          ? (statusMap[projectId + '.' + run.id] || statusMap[run.id] || '')
-          : ((prev && prev.status) || '');
-        if (status) run.status = String(status).trim();
+        let raw = '';
+        if (statusFile) raw = statusMap[projectId + '.' + run.id] || statusMap[run.id] || '';
+        else if (prev && prev.status) raw = { text: prev.status, color: prev.tone || '' };
+
+        const status = normalizeStatus(raw);
+        if (status.text) {
+          run.status = status.text;
+          if (status.tone) run.tone = status.tone;
+        }
       });
 
       if (!runs.length && !promptFile) return;

@@ -122,15 +122,34 @@
 
   /* ---------- 渲染 ---------- */
 
-  /* 状态标签：文字里含「通过」且不含「未 / 没 / 不」显示绿色，其余一律红色 */
+  /* 颜色：status.json 里自己定色的优先；只写了文字时，含「通过」且不含「未 / 没 / 不」算绿色，其余红色 */
   function isPass(text) {
     return text.indexOf('通过') !== -1 && !/[未没不]/.test(text);
+  }
+
+  function toneOf(text, tone) {
+    var value = String(tone || '').trim().toLowerCase();
+    if (value === 'green' || value === '绿' || value === '绿色') return 'green';
+    if (value === 'red' || value === '红' || value === '红色') return 'red';
+    if (value === 'yellow' || value === '黄' || value === '黄色') return 'yellow';
+    return isPass(text) ? 'green' : 'red';
+  }
+
+  /* status.json 的值：字符串 = 只给文字；对象 = 文字 + 自定义颜色 */
+  function statusEntry(value) {
+    if (value && typeof value === 'object') {
+      return {
+        text: String(value.text || value.label || '').trim(),
+        tone: String(value.color || value.tone || '').trim()
+      };
+    }
+    return { text: String(value || '').trim(), tone: '' };
   }
 
   function statusChip(run) {
     var text = run && run.status ? String(run.status).trim() : '';
     if (!text) return '';
-    return '<span class="cap-status ' + (isPass(text) ? 'is-pass' : 'is-fail') + '">' +
+    return '<span class="cap-status is-' + toneOf(text, run.tone) + '">' +
       escapeHtml(text) + '</span>';
   }
 
@@ -299,12 +318,13 @@
   function applyStatuses(node, projectId, map) {
     Array.prototype.forEach.call(node.querySelectorAll('.preview[data-run]'), function (figure) {
       var runId = figure.getAttribute('data-run');
-      var text = String(map[runId] || map[projectId + '.' + runId] || '').trim();
+      var value = map[runId] !== undefined ? map[runId] : map[projectId + '.' + runId];
+      var entry = statusEntry(value);
       var cap = figure.querySelector('.preview-cap');
       if (!cap) return;
 
       var chip = cap.querySelector('.cap-status');
-      if (!text) {
+      if (!entry.text) {
         if (chip) chip.remove();
         return;
       }
@@ -312,8 +332,8 @@
         chip = document.createElement('span');
         cap.appendChild(chip);
       }
-      chip.className = 'cap-status ' + (isPass(text) ? 'is-pass' : 'is-fail');
-      if (chip.textContent !== text) chip.textContent = text;
+      chip.className = 'cap-status is-' + toneOf(entry.text, entry.tone);
+      if (chip.textContent !== entry.text) chip.textContent = entry.text;
     });
   }
 

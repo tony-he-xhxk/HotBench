@@ -346,7 +346,8 @@ button { font-family: inherit; }
   padding: 1px 9px;
 }
 
-/* 状态标签：含「通过」且不含「未 / 没 / 不」为绿色，其余为红色 */
+/* 状态标签：颜色可以在 status.json 里自己指定（green / red / yellow），
+   只写了文字时按「含通过且不含未/没/不」判绿，其余红 */
 .cap-status {
   font-size: 11.5px;
   border: 1px solid;
@@ -354,8 +355,9 @@ button { font-family: inherit; }
   padding: 1px 9px;
   white-space: nowrap;
 }
-.cap-status.is-pass { color: #2e7d32; background: #edf8ef; border-color: #c6e5ca; }
-.cap-status.is-fail { color: #d64545; background: #fdeeec; border-color: #f6d0cb; }
+.cap-status.is-green { color: #2e7d32; background: #edf8ef; border-color: #c6e5ca; }
+.cap-status.is-red { color: #d64545; background: #fdeeec; border-color: #f6d0cb; }
+.cap-status.is-yellow { color: #9a6a00; background: #fff8e3; border-color: #f0dfae; }
 
 /* ===== 空状态 ===== */
 .empty-tip {
