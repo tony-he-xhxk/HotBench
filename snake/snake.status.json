@@ -3,5 +3,5 @@
   "deepseek-v41-flash.codex.1": { "text": "没问题", "color": "green" },
   "deepseek-v41-flash.workbuddy.1": { "text": "有延迟", "color": "red" },
   "space-bunny.workbuddy.1": { "text": "没画蛇眼睛", "color": "yellow" },
-  "glm-5.3-flash.workbuddy.1": { "text": "按上/下键才能开始游戏，左/右键没用", "color": "red" }
+  "glm-5.3-flash.workbuddy.1": { "text": "按左/右键无法开始游戏，移动端网页显示不全", "color": "red" }
 }
