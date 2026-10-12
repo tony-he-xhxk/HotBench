@@ -4,7 +4,7 @@
 
    用法：
      node tools/snapshot.mjs snake/snake.deepseek-v41-flash.codex.1/snake.….html
-     node tools/snapshot.mjs <html> [输出.png] [--width 1280] [--height 1000] [--profile <临时用户目录>]
+     node tools/snapshot.mjs <html> [输出.png] [--width 1280] [--height 1000] [--budget 4000] [--profile <临时用户目录>]
 
    不传输出路径时，默认写成同目录下的同名 .png（例如 snake.….html → snake.….png）。
    实测目录里存在同名 png 时，网页就以这张截图代替实时预览，点击在新标签页打开 HTML。
@@ -45,6 +45,7 @@ function parseArgs(argv) {
     const key = argv[i];
     if (key === '--width') args.width = Number(argv[i + 1]);
     else if (key === '--height') args.height = Number(argv[i + 1]);
+    else if (key === '--budget') args.budget = Number(argv[i + 1]);
     else if (key === '--profile') args.profile = argv[i + 1];
     else args.rest.push(key);
   }
@@ -85,7 +86,7 @@ const result = spawnSync(chrome, [
   '--force-device-scale-factor=1',
   '--user-data-dir=' + profileDir,
   '--window-size=' + width + ',' + height,
-  '--virtual-time-budget=4000',
+  '--virtual-time-budget=' + (args.budget || 4000),
   '--screenshot=' + outFile,
   fileUrl
 ], { stdio: ['ignore', 'ignore', 'ignore'] });

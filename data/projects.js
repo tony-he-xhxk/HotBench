@@ -15,7 +15,8 @@ window.HOTBENCH_DATA = {
       "deepseek-v41-flash": "deepseek-v4.1-flash",
       "glm-5.3-flash": "glm-5.3-flash",
       "hy4-preview": "hy4-preview",
-      "space-bunny": "space-bunny"
+      "space-bunny": "space-bunny",
+      "step-5-preview": "step-5-preview"
     },
     "harnesses": {
       "codex": "Codex",
@@ -35,7 +36,7 @@ window.HOTBENCH_DATA = {
       "title": "鹈鹕骑自行车",
       "summary": "用 SVG 画一只骑自行车的鹈鹕，纯 2D 动画。",
       "prompt": "创建一个HTML，内容是SVG，绘制一个鹈鹕骑自行车的2D动画。",
-      "comment": "deepseek-v4.1-flash在WorkBuddy上第1轮惨不忍睹，这个飞出去的腿让人啼笑皆非。Codex上第1轮明显好多了，但多了一个碍眼的骑行水壶。第2轮以上两者均修复完毕。\nglm-5.3-flash在WorkBuddy上，第1轮真的笑掉大牙，这个踏板是直接飞出去了，脚也在左右摆荡，根本没在旋转。第2轮修复完毕。\nhy4-preview在WorkBuddy上，有史以来1轮通过的选手！物理没有崩坏！🎉\n新发的匿名大模型space-bunny则成为有史以来修了两轮才过的选手，第1轮鹈鹕脚没问题，但背景（山+树+路虚线）会跳变；第2轮最底下路肩会跳变；第3轮最终通过。",
+      "comment": "deepseek-v4.1-flash在WorkBuddy上第1轮惨不忍睹，这个飞出去的腿让人啼笑皆非。Codex上第1轮明显好多了，但多了一个碍眼的骑行水壶。第2轮以上两者均修复完毕。\nglm-5.3-flash在WorkBuddy上，第1轮真的笑掉大牙，这个踏板是直接飞出去了，脚也在左右摆荡，根本没在旋转。第2轮修复完毕。\nhy4-preview在WorkBuddy上，有史以来1轮通过的选手！物理没有崩坏！🎉\n新发的匿名大模型space-bunny则成为有史以来修了两轮才过的选手，第1轮鹈鹕脚没问题，但背景（山+树+路虚线）会跳变；第2轮最底下路肩会跳变；第3轮最终通过。\n新发的step-5-preview真是偷懒之王！一开始没画膝盖，直接是一条线，腿跟纸片一样来回翻转，物理崩坏，惨不忍睹，成为HotBench历史上第一个“眼低手低”的选手（其他模型的翻车大多是眼高手低），纯属设计偷懒；第2轮画了膝盖，但是多画了一条线，把大腿根和脚踝连起来了，还填充进了颜色，两条腿都变成了俩橙色三角形，不知所云；第3轮终于修复成功。",
       "promptUrl": "pelican-bicycle/pelican-bicycle.prompt.txt",
       "commentUrl": "pelican-bicycle/pelican-bicycle.comment.txt",
       "statusUrl": "pelican-bicycle/pelican-bicycle.status.json",
@@ -119,6 +120,30 @@ window.HOTBENCH_DATA = {
           "attempt": 3,
           "file": "pelican-bicycle/pelican-bicycle.space-bunny.workbuddy.3/pelican-bicycle.space-bunny.workbuddy.3.html",
           "status": "终于通过"
+        },
+        {
+          "id": "step-5-preview.workbuddy.1",
+          "model": "step-5-preview",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "pelican-bicycle/pelican-bicycle.step-5-preview.workbuddy.1/pelican-bicycle.step-5-preview.workbuddy.1.html",
+          "status": "腿像纸片一样翻转"
+        },
+        {
+          "id": "step-5-preview.workbuddy.2",
+          "model": "step-5-preview",
+          "harness": "workbuddy",
+          "attempt": 2,
+          "file": "pelican-bicycle/pelican-bicycle.step-5-preview.workbuddy.2/pelican-bicycle.step-5-preview.workbuddy.2.html",
+          "status": "画蛇添足成一个三角形"
+        },
+        {
+          "id": "step-5-preview.workbuddy.3",
+          "model": "step-5-preview",
+          "harness": "workbuddy",
+          "attempt": 3,
+          "file": "pelican-bicycle/pelican-bicycle.step-5-preview.workbuddy.3/pelican-bicycle.step-5-preview.workbuddy.3.html",
+          "status": "终于通过"
         }
       ]
     },
@@ -127,7 +152,7 @@ window.HOTBENCH_DATA = {
       "title": "贪吃蛇",
       "summary": "",
       "prompt": "写一个贪吃蛇小游戏，单文件HTML，打开即可玩。",
-      "comment": "deepseek-v4.1-flash在WorkBuddy和在Codex上均一轮通过可以玩耍。Codex上，蛇移动是一格一格跳，略微复古，但是蛇身贯通比较好看；WorkBuddy上，蛇是连续移动的，但是蛇看起来一节一节，每节中间有较大空隙，并据实测反馈，有点延迟，略微影响游戏体验。\r\n新发的匿名大模型Space-Bunny在WorkBuddy上也接入了，试了一下，42s就交付了，这绝对是交付速度最快的模型，没有之一！！游戏的逻辑是正常的，并且没有延迟。但是这个蛇的眼睛是没画的，而且蛇身也是采用格子染色的方式得到，比较偷懒的视觉效果，感觉有点像人类程序员先跑通后优化UI的逻辑。\r\nglm-5.3-flash在WorkBuddy上的测试，游戏逻辑大致正确，并且没有延迟。蛇身也是采用格子染色的方式得到，比较偷懒的视觉效果。并且存在两个bug：1.UI写“按任意方向键开始”，实测按上/下键才能开始，左/右键无效（移动端上下滑才能开始，左右滑无效）；2.移动端网页未显示全，导致右下角棋盘与得分看不见。",
+      "comment": "deepseek-v4.1-flash在WorkBuddy和在Codex上均一轮通过可以玩耍。Codex上，蛇移动是一格一格跳，略微复古，但是蛇身贯通比较好看；WorkBuddy上，蛇是连续移动的，但是蛇看起来一节一节，每节中间有较大空隙，并据实测反馈，有点延迟，略微影响游戏体验。\r\n新发的匿名大模型Space-Bunny在WorkBuddy上也接入了，试了一下，42s就交付了，这绝对是交付速度最快的模型，没有之一！！游戏的逻辑是正常的，并且没有延迟。但是这个蛇的眼睛是没画的，而且蛇身也是采用格子染色的方式得到，比较偷懒的视觉效果，感觉有点像人类程序员先跑通后优化UI的逻辑。\r\nglm-5.3-flash在WorkBuddy上的测试，游戏逻辑大致正确，并且没有延迟。蛇身也是采用格子染色的方式得到，比较偷懒的视觉效果。并且存在两个bug：1.UI写“按任意方向键开始”，实测按上/下键才能开始，左/右键无效（移动端上下滑才能开始，左右滑无效）；2.移动端网页未显示全，导致右下角棋盘与得分看不见。\r\n新发的模型step-5-preview在WorkBuddy上的测试，游戏逻辑正确，并且没有延迟，但是玩家体验感极差：1.一进页面直接零帧起手开始游戏，不给玩家任何喘息时间，蛇就撞墙死了；2.实测蛇每吃到豆子会加速，但是加速5次之后太快，玩家无法进行微操，体验感极差。",
       "promptUrl": "snake/snake.prompt.txt",
       "commentUrl": "snake/snake.comment.txt",
       "statusUrl": "snake/snake.status.json",
@@ -170,6 +195,16 @@ window.HOTBENCH_DATA = {
           "file": "snake/snake.space-bunny.workbuddy.1/snake.space-bunny.workbuddy.1.html",
           "shot": "snake/snake.space-bunny.workbuddy.1/snake.space-bunny.workbuddy.1.png",
           "status": "没画蛇眼睛",
+          "tone": "yellow"
+        },
+        {
+          "id": "step-5-preview.workbuddy.1",
+          "model": "step-5-preview",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "snake/snake.step-5-preview.workbuddy.1/snake.step-5-preview.workbuddy.1.html",
+          "shot": "snake/snake.step-5-preview.workbuddy.1/snake.step-5-preview.workbuddy.1.png",
+          "status": "体验感极差",
           "tone": "yellow"
         }
       ]
