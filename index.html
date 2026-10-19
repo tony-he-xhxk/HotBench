@@ -27,7 +27,25 @@
       <h1 class="hero-title">HotBench <span class="hero-sep">·</span> 有趣的benchmark 实测</h1>
       <p class="hero-desc">同一个 prompt，交给不同的 AI 模型与 Harness，看看它们各自能做出什么。</p>
       <p class="hero-note" id="hero-note"></p>
+      <p class="score-rule">
+        计分：白银题每个「模型 × Harness」满分 2 分 —— 第 1 轮做对得 2 分，第 2 轮才做对得 1 分，两轮都没做对得 0 分；
+        青铜题满分 1 分 —— 一轮做对得 1 分（绿灯或黄灯都算对），否则 0 分。总得分率 = 实得分 ÷ 满分 × 100%。
+      </p>
     </section>
+
+    <div class="toolbar">
+      <label class="toolbar-field">
+        <span>赛题难度</span>
+        <select id="tier-filter" class="tier-select"></select>
+      </label>
+      <label class="toolbar-field toolbar-search">
+        <span>搜索赛题</span>
+        <input id="project-search" type="search" autocomplete="off"
+               placeholder="鹈鹕 / pelican bicycle / pelican-bicycle / snake…">
+      </label>
+    </div>
+
+    <p id="filter-empty" class="empty-tip" hidden>没有匹配的赛题。</p>
 
     <div id="projects" class="projects"></div>
 

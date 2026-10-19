@@ -1,0 +1,9 @@
+{
+  "_说明": "键是「模型.harness」，值是这个组合的短评",
+  "deepseek-v41-flash.codex": "一轮通过。蛇是一格一格跳的复古手感，但蛇身连贯、画面干净。",
+  "deepseek-v41-flash.workbuddy": "蛇的每节之间间隙较大，实测有可感知的延迟。",
+  "glm-5.3-flash.workbuddy": "逻辑基本正确，但只能用上/下键开始，左/右键无效；移动端页面还显示不全。",
+  "space-bunny.workbuddy": "一轮通过、没有延迟，交付速度也是最快的；但蛇没有眼睛，蛇身用格子染色，UI 明显偷懒。",
+  "step-5-preview.workbuddy": "逻辑正确、没有延迟，但一进页面就零帧起手、蛇直接撞墙；吃豆加速 5 次后快到无法微操，体验极差。",
+  "mimo-v2.6-pro.workbuddy": "逻辑正确，但蛇头没画眼睛，整体观感和 Space-Bunny 很接近。"
+}

@@ -1,22 +1,31 @@
 /* ============================================================
    HotBench 前端逻辑
    数据来自 data/projects.js（由 tools/build-index.mjs 扫描生成）
-   两种展示方式：按 Model 分组 / 按 Harness 分组
+   每个条目 = 一个「Model × Harness」，下面是该组合的 1~2 次效果 + 一句短评
    ============================================================ */
 
 (function () {
   'use strict';
 
   var DATA = window.HOTBENCH_DATA || {};
-  var MODE_KEY = 'hotbench-mode';
   /* 预览用的固定视口（与 style.css 里 .shot 的 1280 / 1000 对应），再等比缩放到卡片大小 */
   var FRAME_W = 1280;
   var FRAME_H = 1000;
   var FRAME_MIN_H = 520;
 
+  /* 赛题段位：bronze / silver / gold */
+  var TIERS = {
+    bronze: { label: '青铜', className: 'tier-bronze' },
+    silver: { label: '白银', className: 'tier-silver' },
+    gold: { label: '金牌', className: 'tier-gold' }
+  };
+
   var el = {
     projects: document.getElementById('projects'),
     heroNote: document.getElementById('hero-note'),
+    tierFilter: document.getElementById('tier-filter'),
+    search: document.getElementById('project-search'),
+    filterEmpty: document.getElementById('filter-empty'),
     navRepo: document.getElementById('nav-repo'),
     footRepo: document.getElementById('foot-repo'),
     footGithubWrap: document.getElementById('foot-github-wrap'),
@@ -58,118 +67,109 @@
     return seen;
   }
 
-  function storedMode() {
-    try {
-      var saved = window.localStorage.getItem(MODE_KEY);
-      if (saved === 'model' || saved === 'harness') return saved;
-    } catch (error) { /* 隐私模式下忽略 */ }
-    return 'model';
-  }
+  /* ---------- 数据整理 ---------- */
 
-  function rememberMode(mode) {
-    try { window.localStorage.setItem(MODE_KEY, mode); } catch (error) { /* 忽略 */ }
-  }
+  /* 按「Model × Harness」聚合成条目；键和 reviews.json 里的键一致（模型.harness） */
+  function entriesOf(project) {
+    var runs = (project.runs || []).slice().sort(function (a, b) {
+      return modelLabel(a.model).localeCompare(modelLabel(b.model)) ||
+        harnessLabel(a.harness).localeCompare(harnessLabel(b.harness)) ||
+        a.attempt - b.attempt;
+    });
 
-  /* ---------- 分组 ---------- */
-
-  /* 返回 [{ key, label, runs: [{ run, caption, tag, title }] }] */
-  function groupRuns(project, mode) {
-    var runs = project.runs || [];
-    var order = [];
+    var keys = [];
     var buckets = {};
+    var reviews = project.reviews || {};
 
     runs.forEach(function (run) {
-      var key = mode === 'harness' ? run.harness : run.model;
+      var key = run.model + '.' + run.harness;
       if (!buckets[key]) {
-        buckets[key] = [];
-        order.push(key);
+        buckets[key] = { key: key, model: run.model, harness: run.harness, runs: [] };
+        keys.push(key);
       }
-      buckets[key].push(run);
+      buckets[key].runs.push(run);
     });
 
-    return order.map(function (key) {
-      var list = buckets[key].slice();
+    var preferred = Array.isArray(project.entryOrder) ? project.entryOrder : [];
 
-      list.sort(function (a, b) {
-        var left = mode === 'harness' ? modelLabel(a.model) : harnessLabel(a.harness);
-        var right = mode === 'harness' ? modelLabel(b.model) : harnessLabel(b.harness);
-        return left.localeCompare(right) || a.attempt - b.attempt;
-      });
-
-      var repeated = {};
-      list.forEach(function (run) {
-        var counter = mode === 'harness' ? run.model : run.harness;
-        repeated[counter] = (repeated[counter] || 0) + 1;
-      });
-
-      return {
-        key: key,
-        label: mode === 'harness' ? harnessLabel(key) : modelLabel(key),
-        runs: list.map(function (run) {
-          var counter = mode === 'harness' ? run.model : run.harness;
-          return {
-            run: run,
-            caption: mode === 'harness'
-              ? modelLabel(run.model) + ' 的效果'
-              : '在 ' + harnessLabel(run.harness) + ' 上跑的效果',
-            tag: repeated[counter] > 1 ? '第 ' + run.attempt + ' 次' : '',
-            title: project.id + ' · ' + modelLabel(run.model) + ' × ' + harnessLabel(run.harness)
-              + ' · 第 ' + run.attempt + ' 次'
-          };
-        })
-      };
+    return keys.map(function (key) {
+      var entry = buckets[key];
+      entry.title = modelLabel(entry.model) + ' × ' + harnessLabel(entry.harness);
+      entry.review = String(reviews[key] || '').trim();
+      return entry;
+    }).sort(function (a, b) {
+      var indexA = preferred.indexOf(a.key);
+      var indexB = preferred.indexOf(b.key);
+      if (indexA < 0) indexA = 9999;
+      if (indexB < 0) indexB = 9999;
+      return indexA - indexB || a.title.localeCompare(b.title);
     });
+  }
+
+  /* ---------- 总得分率 ----------
+     白银：每个条目满分 2 分（第 1 轮做对 2 分，第 2 轮才做对 1 分，两轮没做对 0 分）
+     青铜：每个条目满分 1 分（第 1 轮做对 1 分，否则 0 分）
+     做对 = 绿灯或黄灯 */
+  function isCorrect(run) {
+    return !!run && (run.tone === 'green' || run.tone === 'yellow');
+  }
+
+  function scoreOf(project, entries) {
+    var chances = Number(project.chances) || 0;
+    var total = 0;
+
+    entries.forEach(function (entry) {
+      var first = null;
+      var second = null;
+      entry.runs.forEach(function (run) {
+        if (run.attempt === 1) first = run;
+        else if (run.attempt === 2 && !second) second = run;
+      });
+      if (!first) first = entry.runs[0] || null;
+
+      if (chances >= 2) {
+        if (isCorrect(first)) total += 2;
+        else if (isCorrect(second)) total += 1;
+      } else if (isCorrect(first)) {
+        total += 1;
+      }
+    });
+
+    var max = chances * entries.length;
+    return { total: total, max: max, rate: max ? (total / max) * 100 : 0 };
+  }
+
+  function formatRate(rate) {
+    var rounded = Math.round(rate * 10) / 10;
+    return (rounded % 1 === 0 ? String(rounded) : rounded.toFixed(1)) + '%';
+  }
+
+  /* ---------- 指示灯 ---------- */
+
+  /* 颜色来自 meta.json 的 lights；没有颜色的效果不显示指示灯 */
+  function statusLight(run) {
+    var tone = String((run && run.tone) || '').trim().toLowerCase();
+    if (tone !== 'green' && tone !== 'red' && tone !== 'yellow') return '';
+    return '<span class="status-light is-' + tone + '" aria-hidden="true"></span>';
   }
 
   /* ---------- 渲染 ---------- */
 
-  /* 颜色：status.json 里自己定色的优先；只写了文字时，含「通过」且不含「未 / 没 / 不」算绿色，其余红色 */
-  function isPass(text) {
-    return text.indexOf('通过') !== -1 && !/[未没不]/.test(text);
-  }
-
-  function toneOf(text, tone) {
-    var value = String(tone || '').trim().toLowerCase();
-    if (value === 'green' || value === '绿' || value === '绿色') return 'green';
-    if (value === 'red' || value === '红' || value === '红色') return 'red';
-    if (value === 'yellow' || value === '黄' || value === '黄色') return 'yellow';
-    return isPass(text) ? 'green' : 'red';
-  }
-
-  /* status.json 的值：字符串 = 只给文字；对象 = 文字 + 自定义颜色 */
-  function statusEntry(value) {
-    if (value && typeof value === 'object') {
-      return {
-        text: String(value.text || value.label || '').trim(),
-        tone: String(value.color || value.tone || '').trim()
-      };
-    }
-    return { text: String(value || '').trim(), tone: '' };
-  }
-
-  function statusChip(run) {
-    var text = run && run.status ? String(run.status).trim() : '';
-    if (!text) return '';
-    return '<span class="cap-status is-' + toneOf(text, run.tone) + '">' +
-      escapeHtml(text) + '</span>';
-  }
-
-  function previewCard(item) {
-    var run = item.run;
+  function previewCard(entry, run) {
+    var title = entry.title + ' · 第 ' + run.attempt + ' 次';
     /* 有截图就展示截图，点击在新标签页打开；没有就实时预览 + 点击放大 */
     var stage = run.shot
       ? '<a class="shot shot-link" href="' + escapeHtml(run.file) + '" target="_blank" rel="noopener" ' +
-          'aria-label="在新标签页打开 ' + escapeHtml(item.title) + '">' +
-          '<img class="shot-img" src="' + escapeHtml(run.shot) + '" alt="' + escapeHtml(item.title) +
+          'aria-label="在新标签页打开 ' + escapeHtml(title) + '">' +
+          '<img class="shot-img" src="' + escapeHtml(run.shot) + '" alt="' + escapeHtml(title) +
             '" loading="lazy" decoding="async">' +
           '<span class="shot-zoom">在新标签页打开</span>' +
         '</a>'
       : '<div class="shot">' +
           '<iframe class="shot-frame" data-src="' + escapeHtml(run.file) + '" title="' +
-            escapeHtml(item.title) + '" scrolling="no" loading="lazy"></iframe>' +
+            escapeHtml(title) + '" scrolling="no" loading="lazy"></iframe>' +
           '<button class="shot-mask" type="button" data-file="' + escapeHtml(run.file) +
-            '" data-title="' + escapeHtml(item.title) + '" aria-label="放大查看 ' +
-            escapeHtml(item.title) + '">' +
+            '" data-title="' + escapeHtml(title) + '" aria-label="放大查看 ' + escapeHtml(title) + '">' +
             '<span class="shot-zoom">点击放大</span>' +
           '</button>' +
         '</div>';
@@ -178,26 +178,38 @@
       '<figure class="preview" data-run="' + escapeHtml(run.id || '') + '">' +
         stage +
         '<figcaption class="preview-cap">' +
-          '<span class="cap-main">' + escapeHtml(item.caption) + '</span>' +
-          (item.tag ? '<span class="cap-tag">' + escapeHtml(item.tag) + '</span>' : '') +
-          statusChip(item.run) +
+          statusLight(run) +
+          '<span class="cap-main">第 ' + run.attempt + ' 次</span>' +
         '</figcaption>' +
       '</figure>';
   }
 
-  function renderGroups(container, project, mode) {
+  function renderEntries(container, entries) {
     var html = '';
 
-    groupRuns(project, mode).forEach(function (group) {
-      html += '<section class="group">' +
-        '<h3 class="group-title">' + escapeHtml(group.label) +
-          '<span class="group-count">' + group.runs.length + ' 个效果</span>' +
-        '</h3>' +
-        '<div class="previews">' + group.runs.map(previewCard).join('') + '</div>' +
+    entries.forEach(function (entry) {
+      html += '<section class="entry" data-key="' + escapeHtml(entry.key) + '">' +
+        '<h3 class="entry-title">' + escapeHtml(entry.title) + '</h3>' +
+        '<div class="previews">' +
+          entry.runs.map(function (run) { return previewCard(entry, run); }).join('') +
+        '</div>' +
+        (entry.review
+          ? '<p class="entry-review">' + escapeHtml(entry.review) + '</p>'
+          : '') +
       '</section>';
     });
 
     container.innerHTML = html || '<p class="empty-tip">这个 benchmark 还没有实测结果。</p>';
+  }
+
+  function tierInfo(project) {
+    var tier = TIERS[String(project.tier || '').toLowerCase()];
+    if (!tier) return null;
+    var chances = Number(project.chances) || 0;
+    return {
+      text: tier.label + '赛题' + (chances ? ' · 只有 ' + chances + ' 次机会' : ''),
+      className: tier.className
+    };
   }
 
   function buildProject(project) {
@@ -221,13 +233,20 @@
       '</details>';
     }
 
-    var commentBox = '';
-    if (project.comment) {
-      commentBox = '<section class="comment-box">' +
-        '<p class="comment-label">评语</p>' +
-        '<p class="comment-text">' + escapeHtml(project.comment) + '</p>' +
-      '</section>';
-    }
+    var tier = tierInfo(project);
+    var tierBadge = tier
+      ? '<span class="tier-badge ' + tier.className + '">' + escapeHtml(tier.text) + '</span>'
+      : '';
+
+    var entries = entriesOf(project);
+    var score = scoreOf(project, entries);
+    var scoreBox = Number(project.chances)
+      ? '<div class="score-box">' +
+          '<span class="score-label">总得分率</span>' +
+          '<strong class="score-value">' + formatRate(score.rate) + '</strong>' +
+          '<span class="score-detail">' + score.total + ' / ' + score.max + ' 分</span>' +
+        '</div>'
+      : '';
 
     var node = document.createElement('article');
     node.className = 'project';
@@ -235,37 +254,21 @@
     node.innerHTML = '' +
       '<div class="project-head">' +
         '<div class="project-info">' +
-          '<h2 class="project-name">' + escapeHtml(project.title || project.id) + '</h2>' +
+          '<div class="project-name-row">' +
+            '<h2 class="project-name">' + escapeHtml(project.title || project.id) + '</h2>' +
+            tierBadge +
+          '</div>' +
           (project.title && project.title !== project.id
             ? '<p class="project-title">' + escapeHtml(project.id) + '</p>'
             : '') +
           '<div class="project-meta">' + chips + '</div>' +
         '</div>' +
-        '<div class="mode-picker">' +
-          '<label for="mode-' + escapeHtml(project.id) + '">展示方式</label>' +
-          '<select class="mode-select" id="mode-' + escapeHtml(project.id) +
-            '" data-project="' + escapeHtml(project.id) + '">' +
-            '<option value="model">按 Model 显示</option>' +
-            '<option value="harness">按 Harness 显示</option>' +
-          '</select>' +
-        '</div>' +
+        scoreBox +
       '</div>' +
       promptBox +
-      '<div class="groups"></div>' +
-      commentBox;
+      '<div class="entries"></div>';
 
-    var groupsBox = node.querySelector('.groups');
-    var select = node.querySelector('.mode-select');
-    var mode = storedMode();
-    select.value = mode;
-    renderGroups(groupsBox, project, mode);
-
-    select.addEventListener('change', function () {
-      rememberMode(select.value);
-      renderGroups(groupsBox, project, select.value);
-      loadFrames(groupsBox);
-    });
-
+    renderEntries(node.querySelector('.entries'), entries);
     refreshProject(node, project);
 
     return node;
@@ -273,7 +276,7 @@
 
   /* ---------- 运行时读取文本文件 ---------- */
 
-  /* prompt / 评语 / 状态标签都在页面加载后再拉一次，所以改了 txt / json 直接 push 就生效；
+  /* prompt / 状态色 / 短评都在页面加载后再拉一次，改了文件直接 push 就生效；
      数据文件里解析出来的内容是兜底（file://、离线、或文件被删时用）。
      用 cache: 'no-cache' 让浏览器走 304 校验：改了立刻能看到，没改也不额外下载。 */
   function refreshText(url, apply) {
@@ -294,64 +297,45 @@
       box = document.createElement('details');
       box.className = 'prompt-box';
       box.innerHTML = '<summary>查看原始 prompt</summary><p class="prompt-text"></p>';
-      node.insertBefore(box, node.querySelector('.groups'));
+      node.insertBefore(box, node.querySelector('.entries'));
     }
     var target = box.querySelector('.prompt-text');
     if (target.textContent !== text) target.textContent = text;
   }
 
-  function applyComment(node, text) {
-    var box = node.querySelector('.comment-box');
-    if (!text) {
-      if (box) box.remove();
-      return;
-    }
-    if (!box) {
-      box = document.createElement('section');
-      box.className = 'comment-box';
-      box.innerHTML = '<p class="comment-label">评语</p><p class="comment-text"></p>';
-      node.appendChild(box);
-    }
-    var target = box.querySelector('.comment-text');
-    if (target.textContent !== text) target.textContent = text;
-  }
+  function applyReviews(node, map) {
+    Array.prototype.forEach.call(node.querySelectorAll('.entry[data-key]'), function (section) {
+      var key = section.getAttribute('data-key');
+      var text = String(map[key] || '').trim();
+      var box = section.querySelector('.entry-review');
 
-  function applyStatuses(node, projectId, map) {
-    Array.prototype.forEach.call(node.querySelectorAll('.preview[data-run]'), function (figure) {
-      var runId = figure.getAttribute('data-run');
-      var value = map[runId] !== undefined ? map[runId] : map[projectId + '.' + runId];
-      var entry = statusEntry(value);
-      var cap = figure.querySelector('.preview-cap');
-      if (!cap) return;
-
-      var chip = cap.querySelector('.cap-status');
-      if (!entry.text) {
-        if (chip) chip.remove();
+      if (!text) {
+        if (box) box.remove();
         return;
       }
-      if (!chip) {
-        chip = document.createElement('span');
-        cap.appendChild(chip);
+      if (!box) {
+        box = document.createElement('p');
+        box.className = 'entry-review';
+        section.appendChild(box);
       }
-      chip.className = 'cap-status is-' + toneOf(entry.text, entry.tone);
-      if (chip.textContent !== entry.text) chip.textContent = entry.text;
+      if (box.textContent !== text) box.textContent = text;
     });
   }
 
   function refreshProject(node, project) {
     refreshText(project.promptUrl, function (text) { applyPrompt(node, text); });
-    refreshText(project.commentUrl, function (text) { applyComment(node, text); });
 
-    if (!project.statusUrl) return;
-    refreshText(project.statusUrl, function (text) {
-      var map = null;
-      try {
-        map = JSON.parse(text);
-      } catch (error) {
-        return;   /* json 写坏了就沿用数据文件里的标签 */
-      }
-      if (map && typeof map === 'object') applyStatuses(node, project.id, map);
-    });
+    if (project.reviewsUrl) {
+      refreshText(project.reviewsUrl, function (text) {
+        var map = null;
+        try {
+          map = JSON.parse(text);
+        } catch (error) {
+          return;   /* json 写坏了就沿用数据文件里的短评 */
+        }
+        if (map && typeof map === 'object') applyReviews(node, map);
+      });
+    }
   }
 
   /* ---------- iframe 懒加载（滚到附近才运行动画） ---------- */
@@ -499,6 +483,64 @@
 
   /* ---------- 启动 ---------- */
 
+  var projectNodes = [];
+
+  /* 模糊匹配用：去掉空格、连字符、下划线、点等，再做包含判断 */
+  function normalizeName(text) {
+    return String(text || '').toLowerCase().replace(/[\s\-_.·／/]+/g, '');
+  }
+
+  function buildTierOptions(projects) {
+    if (!el.tierFilter) return;
+    var tiers = [];
+    projects.forEach(function (project) {
+      var tier = String(project.tier || '');
+      if (tier && tiers.indexOf(tier) < 0) tiers.push(tier);
+    });
+
+    var html = '<option value="all">全部赛题</option>';
+    tiers.forEach(function (tier) {
+      var info = TIERS[tier];
+      var label = info ? info.label : tier;
+      var chances = 0;
+      projects.forEach(function (project) {
+        if (String(project.tier || '') === tier && !chances) {
+          chances = Number(project.chances) || 0;
+        }
+      });
+      html += '<option value="' + escapeHtml(tier) + '">' +
+        escapeHtml(label + '赛题' + (chances ? ' · 只有 ' + chances + ' 次机会' : '')) +
+        '</option>';
+    });
+
+    var current = el.tierFilter.value;
+    el.tierFilter.innerHTML = html;
+    el.tierFilter.value = current && el.tierFilter.querySelector('option[value="' + current + '"]')
+      ? current
+      : 'all';
+  }
+
+  function applyFilter() {
+    var tier = el.tierFilter ? el.tierFilter.value : 'all';
+    var query = normalizeName(el.search ? el.search.value : '');
+    var shown = 0;
+
+    projectNodes.forEach(function (item) {
+      var project = item.project;
+      var okTier = tier === 'all' || String(project.tier || '') === tier;
+      var haystack = normalizeName([project.title, project.id, project.summary].join(' '));
+      var okQuery = !query || haystack.indexOf(query) !== -1;
+      var visible = okTier && okQuery;
+
+      item.node.hidden = !visible;
+      if (visible) shown += 1;
+    });
+
+    if (el.filterEmpty) {
+      el.filterEmpty.hidden = shown !== 0 || projectNodes.length === 0;
+    }
+  }
+
   function applySite() {
     var site = DATA.site || {};
     var repo = site.repo || '';
@@ -516,20 +558,27 @@
     var projects = projectList();
     applySite();
     el.projects.innerHTML = '';
+    projectNodes = [];
 
     if (!projects.length) {
       el.projects.innerHTML = '<p class="empty-tip">还没有 benchmark 数据，' +
         '在 <code>data/projects.js</code> 里添加即可。</p>';
       el.heroNote.textContent = '';
+      buildTierOptions([]);
+      applyFilter();
       return;
     }
 
     projects.forEach(function (project) {
       var node = buildProject(project);
       el.projects.appendChild(node);
+      projectNodes.push({ project: project, node: node });
       /* 必须挂到页面上再测量：脱开的节点宽度为 0，iframe 会按默认尺寸加载 */
       loadFrames(node);
     });
+
+    buildTierOptions(projects);
+    applyFilter();
 
     var totalRuns = 0;
     var modelSet = [];
@@ -583,6 +632,8 @@
   el.lightbox.addEventListener('click', function (event) {
     if (event.target.hasAttribute('data-close')) closeLightbox();
   });
+  if (el.tierFilter) el.tierFilter.addEventListener('change', applyFilter);
+  if (el.search) el.search.addEventListener('input', applyFilter);
   document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape' && !el.lightbox.hidden) closeLightbox();
   });

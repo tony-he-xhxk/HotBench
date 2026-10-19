@@ -4,8 +4,8 @@
 
    目录约定：
      <project>/<project>.prompt.txt                        该 benchmark 的原始 prompt
-     <project>/<project>.comment.txt                       该 benchmark 的评语（可选）
-     <project>/<project>.status.json                       每次实测的状态标签（可选）
+     <project>/<project>.meta.json                         赛题段位、机会次数、每个效果的指示灯颜色（可选）
+     <project>/<project>.reviews.json                      每个 Model × Harness 的短评（可选）
      <project>/<project>.<model>.<harness>.<attempt>/      一次实测（内含同名 .html）
                                                           里面放同名 .png 截图的话，
                                                           卡片就显示截图、点击在新标签页打开
@@ -18,9 +18,8 @@
      node tools/build-index.mjs --root D:\HotBench      # 指定仓库根目录
      node tools/build-index.mjs --out data/projects.js  # 指定输出文件
 
-   prompt / comment / status 每次都以同名文件为准（status.json 的键是
-   「模型.harness.第几次」，也可以写成完整的文件夹名）；site、labels、各项目的
-   title / summary 属于人工字段，重新生成时会被保留。
+   prompt 每次都以同名文件为准；site、labels、各项目的 title / summary 属于人工字段，
+   重新生成时会被保留。
    ============================================================ */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -105,31 +104,28 @@ function findPrompt(projectDir, projectId) {
   return found ? join(projectDir, found) : null;
 }
 
-function findComment(projectDir, projectId) {
-  const preferred = join(projectDir, projectId + '.comment.txt');
+function findMeta(projectDir, projectId) {
+  const preferred = join(projectDir, projectId + '.meta.json');
   if (existsSync(preferred)) return preferred;
   const found = readdirSync(projectDir)
-    .find((name) => name.toLowerCase().endsWith('.comment.txt'));
+    .find((name) => name.toLowerCase().endsWith('.meta.json'));
   return found ? join(projectDir, found) : null;
 }
 
-function findStatus(projectDir, projectId) {
-  const preferred = join(projectDir, projectId + '.status.json');
+function findReviews(projectDir, projectId) {
+  const preferred = join(projectDir, projectId + '.reviews.json');
   if (existsSync(preferred)) return preferred;
   const found = readdirSync(projectDir)
-    .find((name) => name.toLowerCase().endsWith('.status.json'));
+    .find((name) => name.toLowerCase().endsWith('.reviews.json'));
   return found ? join(projectDir, found) : null;
 }
 
-/* 状态标签表：{ "模型.harness.第几次": 标签 }
-   标签可以写成字符串（颜色按文字里有没有「通过」判断），
-   也可以写成 { "text": "标签文字", "color": "green" } 自己定色。 */
-function readStatus(statusFile) {
+function readJson(file, label) {
   try {
-    const parsed = JSON.parse(readFileSync(statusFile, 'utf8'));
+    const parsed = JSON.parse(readFileSync(file, 'utf8'));
     return parsed && typeof parsed === 'object' ? parsed : {};
   } catch (error) {
-    console.warn('! 状态文件无法解析（' + statusFile + '）：' + error.message);
+    console.warn('! ' + label + ' 无法解析（' + file + '）：' + error.message);
     return {};
   }
 }
@@ -140,17 +136,6 @@ function normalizeTone(value) {
   if (tone === 'red' || tone === '红' || tone === '红色') return 'red';
   if (tone === 'yellow' || tone === '黄' || tone === '黄色') return 'yellow';
   return '';
-}
-
-function normalizeStatus(value) {
-  if (value === null || value === undefined) return { text: '', tone: '' };
-  if (typeof value === 'object') {
-    return {
-      text: String(value.text || value.label || '').trim(),
-      tone: normalizeTone(value.color || value.tone)
-    };
-  }
-  return { text: String(value).trim(), tone: '' };
 }
 
 function findHtml(runDir, runName) {
@@ -200,11 +185,18 @@ function scan() {
     .forEach((projectId) => {
       const projectDir = join(root, projectId);
       const old = previousProjects.get(projectId) || {};
+      const metaFile = findMeta(projectDir, projectId);
+      const meta = metaFile ? readJson(metaFile, 'meta') : {};
+      const chances = Number(meta.chances) || 0;
       const runs = [];
 
       listDirs(projectDir).forEach((dirName) => {
         const parsed = parseRunDir(projectId, dirName);
         if (!parsed) return;
+        if (chances && parsed.attempt > chances) {
+          console.warn('! 跳过（超过 ' + chances + ' 次机会）：' + dirName);
+          return;
+        }
         const html = findHtml(join(projectDir, dirName), dirName);
         if (!html) {
           console.warn('! 跳过（目录里没有 html）：' + dirName);
@@ -233,25 +225,18 @@ function scan() {
       );
 
       const promptFile = findPrompt(projectDir, projectId);
-      const commentFile = findComment(projectDir, projectId);
-      const statusFile = findStatus(projectDir, projectId);
-      const statusMap = statusFile ? readStatus(statusFile) : {};
+      const reviewsFile = findReviews(projectDir, projectId);
+      const reviews = reviewsFile ? readJson(reviewsFile, 'reviews') : {};
+      const lights = (meta.lights && typeof meta.lights === 'object') ? meta.lights : {};
 
       const oldRuns = new Map(((old.runs) || []).map((run) => [run.id, run]));
       runs.forEach((run) => {
         const prev = oldRuns.get(run.id);
         if (prev && prev.note) run.note = prev.note;
 
-        /* 状态标签：优先 status.json，键可以用「模型.harness.第几次」或完整文件夹名 */
-        let raw = '';
-        if (statusFile) raw = statusMap[projectId + '.' + run.id] || statusMap[run.id] || '';
-        else if (prev && prev.status) raw = { text: prev.status, color: prev.tone || '' };
-
-        const status = normalizeStatus(raw);
-        if (status.text) {
-          run.status = status.text;
-          if (status.tone) run.tone = status.tone;
-        }
+        /* 指示灯颜色：meta.json 的 lights，键可以用「模型.harness.第几次」或完整文件夹名 */
+        const tone = normalizeTone(lights[run.id] || lights[projectId + '.' + run.id]);
+        if (tone) run.tone = tone;
       });
 
       if (!runs.length && !promptFile) return;
@@ -261,15 +246,27 @@ function scan() {
         title: old.title || projectId,
         summary: old.summary || '',
         prompt: promptFile ? readFileSync(promptFile, 'utf8').trim() : (old.prompt || ''),
-        comment: commentFile ? readFileSync(commentFile, 'utf8').trim() : (old.comment || ''),
-        /* 页面加载后会用这几个地址再拉一次，改了 txt / json 直接 push 就生效；
+        /* 页面加载后会用这两个地址再拉一次，改了 txt / json 直接 push 就生效；
            上面解析出来的内容是兜底（file://、离线、或文件被删时用） */
         promptUrl: promptFile ? toUrl(promptFile) : '',
-        commentUrl: commentFile ? toUrl(commentFile) : '',
-        statusUrl: statusFile ? toUrl(statusFile) : '',
+        tier: String(meta.tier || old.tier || ''),
+        chances: chances || Number(old.chances) || 0,
+        order: Number(meta.order) || Number(old.order) || 0,
+        entryOrder: Array.isArray(meta.entryOrder)
+          ? meta.entryOrder
+          : (Array.isArray(old.entryOrder) ? old.entryOrder : []),
+        reviews: Object.keys(reviews)
+          .filter((key) => key.charAt(0) !== '_')
+          .reduce((acc, key) => { acc[key] = reviews[key]; return acc; }, {}),
+        reviewsUrl: reviewsFile ? toUrl(reviewsFile) : '',
         runs: runs
       });
     });
+
+  /* 项目顺序：meta.json 的 order 小的在前，没写的按 id 排 */
+  projects.sort((a, b) =>
+    (a.order || 100) - (b.order || 100) || a.id.localeCompare(b.id)
+  );
 
   return {
     site: Object.assign({
