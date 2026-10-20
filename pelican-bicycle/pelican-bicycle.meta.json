@@ -15,6 +15,10 @@
     "space-bunny.workbuddy.1": "red",
     "space-bunny.workbuddy.2": "red",
     "step-5-preview.workbuddy.1": "red",
-    "step-5-preview.workbuddy.2": "red"
+    "step-5-preview.workbuddy.2": "red",
+    "DeepSeek-V4.1-Flash-1017.codex.1": "green",
+    "DeepSeek-V4.1-Flash-1017.workbuddy.1": "green",
+    "MiniMax-M3.1-Flash.workbuddy.1": "red",
+    "MiniMax-M3.1-Flash.workbuddy.2": "red"
   }
 }
