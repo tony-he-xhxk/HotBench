@@ -17,7 +17,8 @@
 ├── <benchmark>.reviews.json           每个 Model × Harness 的短评（可选）
 └── <benchmark>.<model>.<harness>.<n>/ 一次实测
     ├── <benchmark>.<model>.<harness>.<n>.html
-    └── <benchmark>.<model>.<harness>.<n>.png/.webp   初始界面截图（可选）
+    ├── <benchmark>.<model>.<harness>.<n>.png/.webp   初始界面截图（可选）
+    └── <benchmark>.<model>.<harness>.<n>.dump.txt    异常轮次的原因（没有 html 时）
 
         │  tools/build-index.mjs   扫描目录、解析文件夹名、读配置和文本文件
         ▼
@@ -60,6 +61,10 @@
 - **段位**：`<项目名>.meta.json` 的 `tier` / `chances` 决定项目卡上的段位徽章（青铜 / 白银 / 金牌）
   和「只有 N 次机会」；超出 `chances` 的实测在生成数据时就被过滤掉，不会出现在页面上。
 - **指示灯**：每个效果只显示一颗彩色圆点，颜色来自 `meta.json` 的 `lights`。
+- **异常轮次**：实测文件夹里没有 html、只有同名 `.dump.txt` 时，卡片显示淡红底、深红字的异常原因（前两句），
+  点击放大看全文，不提供「在新标签页打开」；同一组合连续两轮异常时，第三轮自动显示「视为放弃参赛」。
+- **黄金题**：`tier: "gold"` + `chances: 3`，按第 1 / 2 / 3 轮做对分别计 3 / 2 / 1 分；
+  只有在前两题（青铜、白银）都一轮通过的选手才能进入。
 - **筛选与搜索**：顶部工具栏可以按段位筛选，也可以对赛题的中英文名做模糊搜索
   （匹配时会忽略空格、连字符、下划线和点，所以「鹈鹕」「pelican bicycle」「pelican-bicycle」都能命中）。
 - **总得分率**：白银每个条目满分 2 分（第 1 轮做对得 2 分、第 2 轮才做对得 1 分、两轮没做对得 0 分）；

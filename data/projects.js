@@ -49,6 +49,7 @@ window.HOTBENCH_DATA = {
         "deepseek-v41-flash.codex",
         "deepseek-v41-flash.workbuddy",
         "glm-5.3-flash.workbuddy",
+        "hy4-preview.workbuddy",
         "space-bunny.workbuddy",
         "mimo-v2.6-pro.workbuddy",
         "step-5-preview.workbuddy",
@@ -62,6 +63,7 @@ window.HOTBENCH_DATA = {
         "deepseek-v41-flash.codex": "一轮通过。蛇是一格一格跳的复古手感，但蛇身连贯、画面干净。",
         "deepseek-v41-flash.workbuddy": "蛇的每节之间间隙较大，实测有可感知的延迟。",
         "glm-5.3-flash.workbuddy": "逻辑基本正确，但只能用上/下键开始，左/右键无效；移动端页面还显示不全。",
+        "hy4-preview.workbuddy": "逻辑正确，没有延迟，有一个小瑕疵：蛇的两个眼睛竟然是一前一后的。",
         "space-bunny.workbuddy": "一轮通过、没有延迟，交付速度也是最快的；但蛇没有眼睛，蛇身用格子染色，UI 明显偷懒。",
         "step-5-preview.workbuddy": "逻辑正确、没有延迟，但一进页面就零帧起手、蛇直接撞墙；吃豆加速 5 次后快到无法微操，体验极差。移动端显示不全。",
         "mimo-v2.6-pro.workbuddy": "逻辑正确，但蛇头没画眼睛，整体观感和 Space-Bunny 很接近。",
@@ -135,6 +137,15 @@ window.HOTBENCH_DATA = {
           "file": "snake/snake.glm-5.3-flash.workbuddy.1/snake.glm-5.3-flash.workbuddy.1.html",
           "shot": "snake/snake.glm-5.3-flash.workbuddy.1/snake.glm-5.3-flash.workbuddy.1.webp",
           "tone": "red"
+        },
+        {
+          "id": "hy4-preview.workbuddy.1",
+          "model": "hy4-preview",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "snake/snake.hy4-preview.workbuddy.1/snake.hy4-preview.workbuddy.1.html",
+          "shot": "snake/snake.hy4-preview.workbuddy.1/snake.hy4-preview.workbuddy.1.webp",
+          "tone": "yellow"
         },
         {
           "id": "mimo-v2.6-pro.workbuddy.1",
@@ -359,6 +370,82 @@ window.HOTBENCH_DATA = {
           "attempt": 2,
           "file": "pelican-bicycle/pelican-bicycle.step-5-preview.workbuddy.2/pelican-bicycle.step-5-preview.workbuddy.2.html",
           "tone": "red"
+        }
+      ]
+    },
+    {
+      "id": "panda-waimai",
+      "title": "熊猫送外卖",
+      "summary": "",
+      "prompt": "写一个html，内容是svg的2D动画：熊猫骑电动车送外卖，佩戴交规要求的安全装备，带外卖箱，在有很多商铺的街上行驶，商铺至少3家有招牌，不要重复路过同一家店，最终停在一个居民楼楼下，并显示文字“外卖已送达！”，可允许用户手动重播动画，但不得自动重播。",
+      "promptUrl": "panda-waimai/panda-waimai.prompt.txt",
+      "tier": "gold",
+      "chances": 3,
+      "order": 3,
+      "entryOrder": [
+        "DeepSeek-V4.1-Flash-1017.codex",
+        "DeepSeek-V4.1-Flash-1017.workbuddy",
+        "DeepSeek-V4.1-Flash-1017.trae-cn"
+      ],
+      "reviews": {
+        "DeepSeek-V4.1-Flash-1017.codex": "第 1 轮，自动车停在了面馆，离居民楼还有一段距离就显示已送达，第 2 轮修复完毕。",
+        "DeepSeek-V4.1-Flash-1017.workbuddy": "第 1 轮逻辑全部正常，一轮通关。",
+        "DeepSeek-V4.1-Flash-1017.trae-cn": "前两轮均因思考过程太长超出限制，被Harness异常打断，两轮均无成品即视为放弃第3轮参赛，最终没有成品。"
+      },
+      "reviewsUrl": "panda-waimai/panda-waimai.reviews.json",
+      "runs": [
+        {
+          "id": "DeepSeek-V4.1-Flash-1017.codex.1",
+          "model": "DeepSeek-V4.1-Flash-1017",
+          "harness": "codex",
+          "attempt": 1,
+          "file": "panda-waimai/panda-waimai.DeepSeek-V4.1-Flash-1017.codex.1/panda-waimai.DeepSeek-V4.1-Flash-1017.codex.1.html",
+          "tone": "red"
+        },
+        {
+          "id": "DeepSeek-V4.1-Flash-1017.codex.2",
+          "model": "DeepSeek-V4.1-Flash-1017",
+          "harness": "codex",
+          "attempt": 2,
+          "file": "panda-waimai/panda-waimai.DeepSeek-V4.1-Flash-1017.codex.2/panda-waimai.DeepSeek-V4.1-Flash-1017.codex.2.html",
+          "tone": "green"
+        },
+        {
+          "id": "DeepSeek-V4.1-Flash-1017.trae-cn.1",
+          "model": "DeepSeek-V4.1-Flash-1017",
+          "harness": "trae-cn",
+          "attempt": 1,
+          "abnormal": true,
+          "dump": "TRAE异常打断模型思考：输出过长，请输入「继续」以获取更多内容。因此本轮无输出。",
+          "dumpExcerpt": "TRAE异常打断模型思考：输出过长，请输入「继续」以获取更多内容。因此本轮无输出。",
+          "tone": "red"
+        },
+        {
+          "id": "DeepSeek-V4.1-Flash-1017.trae-cn.2",
+          "model": "DeepSeek-V4.1-Flash-1017",
+          "harness": "trae-cn",
+          "attempt": 2,
+          "abnormal": true,
+          "dump": "TRAE异常打断模型思考：输出过长，请输入「继续」以获取更多内容。因此本轮无输出。",
+          "dumpExcerpt": "TRAE异常打断模型思考：输出过长，请输入「继续」以获取更多内容。因此本轮无输出。",
+          "tone": "red"
+        },
+        {
+          "id": "DeepSeek-V4.1-Flash-1017.trae-cn.3",
+          "model": "DeepSeek-V4.1-Flash-1017",
+          "harness": "trae-cn",
+          "attempt": 3,
+          "forfeit": true,
+          "message": "由于前两轮模型均在异常状态，第三轮视为放弃参赛。",
+          "tone": "red"
+        },
+        {
+          "id": "DeepSeek-V4.1-Flash-1017.workbuddy.1",
+          "model": "DeepSeek-V4.1-Flash-1017",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "panda-waimai/panda-waimai.DeepSeek-V4.1-Flash-1017.workbuddy.1/panda-waimai.DeepSeek-V4.1-Flash-1017.workbuddy.1.html",
+          "tone": "green"
         }
       ]
     }

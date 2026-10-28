@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>熊猫外卖骑士 · SVG 2D 动画</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    background: radial-gradient(1200px 620px at 50% -12%, #ffffff 0%, #e9eff7 55%, #dbe4ef 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; padding: 26px 20px; color: #33414f;
+  }
+  .stage {
+    width: min(980px, 100%);
+    border-radius: 22px;
+    overflow: hidden;
+    background: #dcefff;
+    box-shadow: 0 30px 70px -30px rgba(32, 58, 88, .55), 0 0 0 1px rgba(255, 255, 255, .8) inset;
+  }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif; }
+  .bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  button {
+    font: inherit; font-size: 15px; font-weight: 700; letter-spacing: .5px;
+    padding: 11px 24px; border-radius: 999px; border: 0; cursor: pointer; color: #fff;
+    background: linear-gradient(180deg, #34a26d, #28885b);
+    box-shadow: 0 8px 18px -8px rgba(40, 136, 91, .95);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  button:hover { transform: translateY(-1px); box-shadow: 0 12px 22px -9px rgba(40, 136, 91, 1); }
+  button:active { transform: translateY(1px) scale(.98); }
+  .hint { font-size: 13px; color: #7e8a98; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+<svg id="scene" viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ttl dsc">
+  <title id="ttl">熊猫骑电动车送外卖</title>
+  <desc id="dsc">戴着头盔、穿反光背心、载着保温外卖箱的熊猫，骑着电动车穿过一条商铺林立的街道，最后停在居民楼下，弹出“外卖已送达！”</desc>
+
+  <defs>
+    <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b7dcff"/>
+      <stop offset="46%" stop-color="#dbeeff"/>
+      <stop offset="100%" stop-color="#fdf6ea"/>
+    </linearGradient>
+    <linearGradient id="roadG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8e9aa8"/>
+      <stop offset="100%" stop-color="#6a7583"/>
+    </linearGradient>
+    <linearGradient id="walkG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2f5f9"/>
+      <stop offset="100%" stop-color="#dde3ea"/>
+    </linearGradient>
+    <linearGradient id="homeG" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f1f5fb"/>
+      <stop offset="68%" stop-color="#e6eef8"/>
+      <stop offset="100%" stop-color="#d8e3f1"/>
+    </linearGradient>
+
+    <filter id="soft" x="-45%" y="-45%" width="190%" height="200%">
+      <feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#22384d" flood-opacity="0.22"/>
+    </filter>
+
+    <clipPath id="helmClip"><path d="M -40,-165 A 35 35 0 0 1 24,-165 Z"/></clipPath>
+
+    <!-- 窗户组件 -->
+    <g id="winA">
+      <rect x="0" y="0" width="44" height="38" rx="3" fill="#ffffff"/>
+      <rect x="3" y="3" width="38" height="32" rx="2" fill="#cfe3f8"/>
+      <rect x="20" y="3" width="3" height="32" fill="#ffffff"/>
+      <path d="M6,6 L20,6 L6,22 Z" fill="#ffffff" opacity="0.5"/>
+    </g>
+    <g id="winB">
+      <rect x="0" y="0" width="44" height="38" rx="3" fill="#ffffff"/>
+      <rect x="3" y="3" width="38" height="32" rx="2" fill="#bfe0d0"/>
+      <rect x="20" y="3" width="3" height="32" fill="#ffffff"/>
+      <path d="M6,6 L20,6 L6,22 Z" fill="#ffffff" opacity="0.5"/>
+    </g>
+    <g id="winC">
+      <rect x="0" y="0" width="44" height="38" rx="3" fill="#ffffff"/>
+      <rect x="3" y="3" width="38" height="32" rx="2" fill="#ffe2ba"/>
+      <rect x="20" y="3" width="3" height="32" fill="#ffffff"/>
+      <path d="M6,6 L20,6 L6,22 Z" fill="#ffffff" opacity="0.45"/>
+    </g>
+
+    <!-- 四角星 -->
+    <path id="star4" d="M 0,-13 L 3.4,-3.4 L 13,0 L 3.4,3.4 L 0,13 L -3.4,3.4 L -13,0 L -3.4,-3.4 Z"/>
+  </defs>
+
+  <!-- ===== 天空 ===== -->
+  <rect x="0" y="0" width="900" height="520" fill="url(#skyG)"/>
+  <circle cx="748" cy="86" r="60" fill="#fff3c4" opacity="0.5"/>
+  <circle cx="748" cy="86" r="40" fill="#ffe9a0" opacity="0.92"/>
+
+  <g id="clouds" opacity="0.92">
+    <g fill="#ffffff">
+      <ellipse cx="120" cy="72" rx="44" ry="19"/>
+      <ellipse cx="152" cy="62" rx="30" ry="20"/>
+      <ellipse cx="90" cy="78" rx="26" ry="13"/>
+    </g>
+    <g fill="#ffffff" opacity="0.9">
+      <ellipse cx="430" cy="52" rx="38" ry="16"/>
+      <ellipse cx="456" cy="44" rx="26" ry="17"/>
+      <ellipse cx="406" cy="58" rx="22" ry="11"/>
+    </g>
+    <g fill="#ffffff" opacity="0.85">
+      <ellipse cx="760" cy="118" rx="42" ry="16"/>
+      <ellipse cx="792" cy="110" rx="26" ry="17"/>
+      <ellipse cx="732" cy="124" rx="22" ry="11"/>
+    </g>
+    <g fill="#ffffff" opacity="0.9">
+      <ellipse cx="1060" cy="66" rx="46" ry="18"/>
+      <ellipse cx="1094" cy="56" rx="28" ry="19"/>
+      <ellipse cx="1028" cy="74" rx="24" ry="12"/>
+    </g>
+    <g fill="#ffffff" opacity="0.88">
+      <ellipse cx="1330" cy="96" rx="40" ry="16"/>
+      <ellipse cx="1360" cy="88" rx="25" ry="16"/>
+      <ellipse cx="1304" cy="102" rx="20" ry="10"/>
+    </g>
+  </g>
+
+  <!-- ===== 地面（静止） ===== -->
+  <rect x="0" y="340" width="900" height="56" fill="url(#walkG)"/>
+  <line x1="0" y1="368" x2="900" y2="368" stroke="#d6dde6" stroke-width="2"/>
+  <rect x="0" y="394" width="900" height="10" fill="#c2cad4"/>
+  <rect x="0" y="404" width="900" height="116" fill="url(#roadG)"/>
+
+  <!-- ===== 世界（横向滚动） ===== -->
+  <g id="world">
+    <g id="seams"></g>
+    <g id="shops"></g>
+    <g id="dashes"></g>
+
+    <!-- 居民楼 -->
+    <g id="home" transform="translate(2180,0)">
+      <rect x="0" y="86" width="640" height="254" fill="url(#homeG)"/>
+      <rect x="0" y="260" width="640" height="80" fill="#e8eff8"/>
+
+      <!-- 屋顶 -->
+      <rect x="-14" y="70" width="668" height="17" rx="4" fill="#cfdae8"/>
+      <rect x="-14" y="87" width="668" height="8" fill="#b8c6d8"/>
+      <g stroke="#c6d3e3" stroke-width="4" stroke-linecap="round">
+        <line x1="18" y1="70" x2="18" y2="54"/>
+        <line x1="46" y1="70" x2="46" y2="54"/>
+        <line x1="74" y1="70" x2="74" y2="54"/>
+      </g>
+      <rect x="18" y="52" width="56" height="4" rx="2" fill="#c6d3e3"/>
+      <rect x="452" y="38" width="78" height="32" rx="5" fill="#dbe5f1" stroke="#c4d1e1" stroke-width="2"/>
+      <rect x="452" y="38" width="78" height="9" rx="4" fill="#c4d1e1"/>
+
+      <!-- 窗户 -->
+      <use href="#winA" x="40"  y="106"/>
+      <use href="#winB" x="126" y="106"/>
+      <use href="#winA" x="212" y="106"/>
+      <use href="#winC" x="298" y="106"/>
+      <use href="#winA" x="384" y="106"/>
+      <use href="#winB" x="470" y="106"/>
+      <use href="#winA" x="556" y="106"/>
+
+      <use href="#winB" x="40"  y="164"/>
+      <use href="#winA" x="126" y="164"/>
+      <use href="#winC" x="212" y="164"/>
+      <use href="#winA" x="298" y="164"/>
+      <use href="#winB" x="384" y="164"/>
+      <use href="#winA" x="470" y="164"/>
+      <use href="#winB" x="556" y="164"/>
+
+      <use href="#winA" x="40"  y="222"/>
+      <use href="#winB" x="126" y="222"/>
+      <use href="#winA" x="212" y="222"/>
+      <use href="#winC" x="298" y="222"/>
+      <use href="#winB" x="470" y="222"/>
+      <use href="#winA" x="556" y="222"/>
+
+      <!-- 空调外机 -->
+      <g fill="#cfd9e6" stroke="#b6c4d6" stroke-width="1.5">
+        <rect x="120" y="264" width="32" height="19" rx="3"/>
+        <rect x="486" y="264" width="32" height="19" rx="3"/>
+      </g>
+      <g stroke="#b6c4d6" stroke-width="1.5">
+        <line x1="124" y1="270" x2="148" y2="270"/>
+        <line x1="124" y1="277" x2="148" y2="277"/>
+        <line x1="490" y1="270" x2="514" y2="270"/>
+        <line x1="490" y1="277" x2="514" y2="277"/>
+      </g>
+
+      <!-- 单元门 -->
+      <rect x="374" y="230" width="92" height="27" rx="5" fill="#2f6fb5"/>
+      <text x="420" y="249" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff" letter-spacing="1">3 号楼</text>
+      <rect x="370" y="265" width="100" height="9" rx="4" fill="#b9c8da"/>
+      <rect x="382" y="274" width="76" height="66" rx="4" fill="#9fb2c8"/>
+      <rect x="387" y="279" width="66" height="56" rx="3" fill="#7288a1"/>
+      <rect x="392" y="284" width="56" height="20" rx="2" fill="#96b3cf" opacity="0.75"/>
+      <circle cx="446" cy="312" r="3" fill="#dfe8f2"/>
+      <rect x="368" y="334" width="104" height="7" rx="3" fill="#cbd6e4"/>
+    </g>
+
+    <!-- 隔壁楼 -->
+    <g id="neighbor" transform="translate(2820,0)">
+      <rect x="0" y="140" width="280" height="200" fill="#e7edf5"/>
+      <rect x="-10" y="130" width="300" height="15" rx="3" fill="#ccd7e5"/>
+      <use href="#winA" x="34"  y="162"/>
+      <use href="#winB" x="118" y="162"/>
+      <use href="#winA" x="202" y="162"/>
+      <use href="#winC" x="34"  y="226"/>
+      <use href="#winA" x="118" y="226"/>
+      <use href="#winB" x="202" y="226"/>
+      <rect x="0" y="290" width="280" height="50" fill="#dfe7f1"/>
+    </g>
+
+    <g id="trees"></g>
+  </g>
+
+  <!-- ===== 熊猫骑手 ===== -->
+  <g id="rider" transform="translate(250,464) scale(1.15)">
+    <ellipse cx="-16" cy="9" rx="128" ry="10" fill="#1d2c3a" opacity="0.16"/>
+
+    <!-- 速度线 -->
+    <g id="speedLines" opacity="0">
+      <rect x="-198" y="-120" width="56" height="5" rx="2.5" fill="#ffffff" opacity="0.9"/>
+      <rect x="-216" y="-94"  width="76" height="5" rx="2.5" fill="#ffffff" opacity="0.72"/>
+      <rect x="-188" y="-66"  width="46" height="5" rx="2.5" fill="#ffffff" opacity="0.85"/>
+      <rect x="-210" y="-40"  width="64" height="5" rx="2.5" fill="#ffffff" opacity="0.6"/>
+    </g>
+
+    <!-- 后轮 -->
+    <g transform="translate(-74,-21)">
+      <circle r="21" fill="#3b454f"/>
+      <circle r="21" fill="none" stroke="#2a323b" stroke-width="2"/>
+      <g id="wheelB">
+        <circle r="14.5" fill="#f2f5f8"/>
+        <circle r="4.5" fill="#9dabb8"/>
+        <g stroke="#c8d1dc" stroke-width="2.4" stroke-linecap="round">
+          <line x1="-13" y1="0" x2="13" y2="0"/>
+          <line x1="0" y1="-13" x2="0" y2="13"/>
+          <line x1="-9" y1="-9" x2="9" y2="9"/>
+          <line x1="-9" y1="9" x2="9" y2="-9"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- 车架 -->
+    <rect x="-58" y="-42" width="120" height="14" rx="7" fill="#3d4854"/>
+    <path d="M -108,-38 L -108,-66 Q -108,-86 -86,-88 L -58,-88 Q -46,-88 -46,-72 L -46,-38 Z" fill="#2e8f8f"/>
+    <rect x="-102" y="-68" width="50" height="5" rx="2.5" fill="#ffffff" opacity="0.18"/>
+    <path d="M 46,-42 L 62,-42 L 74,-110 L 56,-114 Z" fill="#2e8f8f"/>
+    <rect x="52" y="-122" width="42" height="9" rx="4.5" fill="#4b5665"/>
+    <circle cx="94" cy="-122" r="5" fill="#36414f"/>
+    <path d="M 58,-120 L 58,-134" stroke="#4b5665" stroke-width="3"/>
+    <ellipse cx="57" cy="-138" rx="7.5" ry="5.5" fill="#4b5665" stroke="#36414f" stroke-width="1.5"/>
+    <circle cx="76" cy="-86" r="13" fill="#ffe89a" opacity="0.3"/>
+    <circle cx="76" cy="-86" r="7.5" fill="#ffe89a"/>
+    <rect x="-116" y="-76" width="9" height="15" rx="2" fill="#ef4b4b"/>
+    <rect x="-113" y="-56" width="30" height="15" rx="3" fill="#2fa06a"/>
+    <text x="-98" y="-45" font-size="8.5" font-weight="700" fill="#ffffff" text-anchor="middle">京A·8</text>
+
+    <!-- 后座货架 + 外卖箱 -->
+    <rect x="-144" y="-94" width="70" height="7" rx="3" fill="#4e5a66"/>
+    <rect x="-104" y="-94" width="7" height="22" rx="3" fill="#4e5a66"/>
+    <rect x="-148" y="-154" width="82" height="66" rx="9" fill="#f3a318"/>
+    <rect x="-148" y="-154" width="82" height="17" rx="9" fill="#d98a0e"/>
+    <rect x="-148" y="-154" width="82" height="66" rx="9" fill="none" stroke="#c07a0a" stroke-width="2"/>
+    <rect x="-148" y="-101" width="82" height="6" fill="#fff3d6" opacity="0.9"/>
+    <rect x="-148" y="-118" width="82" height="4" fill="#fff3d6" opacity="0.5"/>
+    <text x="-107" y="-116" text-anchor="middle" font-size="20" font-weight="800" fill="#ffffff" letter-spacing="1">外卖</text>
+    <path d="M-118,-131 q7,-9 14,0" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" opacity="0.85"/>
+
+    <!-- 座椅 -->
+    <rect x="-96" y="-96" width="54" height="11" rx="5.5" fill="#2f3945"/>
+
+    <!-- 前轮 -->
+    <g transform="translate(74,-21)">
+      <circle r="21" fill="#3b454f"/>
+      <circle r="21" fill="none" stroke="#2a323b" stroke-width="2"/>
+      <g id="wheelF">
+        <circle r="14.5" fill="#f2f5f8"/>
+        <circle r="4.5" fill="#9dabb8"/>
+        <g stroke="#c8d1dc" stroke-width="2.4" stroke-linecap="round">
+          <line x1="-13" y1="0" x2="13" y2="0"/>
+          <line x1="0" y1="-13" x2="0" y2="13"/>
+          <line x1="-9" y1="-9" x2="9" y2="9"/>
+          <line x1="-9" y1="9" x2="9" y2="-9"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- 远侧手臂 -->
+    <path d="M -28,-110 Q 8,-122 72,-122" stroke="#3d3d3d" stroke-width="11" stroke-linecap="round" fill="none"/>
+
+    <!-- 身体 -->
+    <ellipse cx="-36" cy="-106" rx="28" ry="38" fill="#ffffff" transform="rotate(12 -36 -106)"/>
+    <!-- 反光背心 -->
+    <g transform="rotate(12 -36 -106)">
+      <rect x="-58" y="-130" width="44" height="52" rx="14" fill="#d5f04a"/>
+      <rect x="-58" y="-120" width="44" height="5" fill="#f6f9fb"/>
+      <rect x="-58" y="-110" width="44" height="5" fill="#f6f9fb"/>
+      <rect x="-58" y="-130" width="44" height="52" rx="14" fill="none" stroke="#b9d63d" stroke-width="2"/>
+    </g>
+
+    <!-- 腿 -->
+    <path d="M -46,-88 Q -12,-80 4,-70 Q 13,-60 15,-48" stroke="#2b2b2b" stroke-width="16" fill="none" stroke-linecap="round"/>
+    <ellipse cx="18" cy="-43" rx="12.5" ry="7" fill="#2b2b2b" transform="rotate(-8 18 -43)"/>
+
+    <!-- 近侧手臂（先画，手臂上端被头部压住） -->
+    <path d="M -30,-106 Q 10,-114 74,-118" stroke="#2b2b2b" stroke-width="15" stroke-linecap="round" fill="none"/>
+    <circle cx="76" cy="-117" r="8.5" fill="#2b2b2b"/>
+
+    <!-- 头 -->
+    <circle cx="-8" cy="-152" r="30" fill="#ffffff" stroke="#e3e9f1" stroke-width="1.2"/>
+    <circle cx="-41" cy="-176" r="12" fill="#2b2b2b"/>
+
+    <!-- 头盔 -->
+    <path d="M -40,-165 A 35 35 0 0 1 24,-165 Z" fill="#f5f9fd" stroke="#d2dde9" stroke-width="2"/>
+    <g clip-path="url(#helmClip)">
+      <rect x="-42" y="-174" width="72" height="10" fill="#2e8f8f"/>
+    </g>
+    <path d="M 15,-167 q 22,2 24,11 q -9,5 -24,3 Z" fill="#2e8f8f"/>
+    <rect x="-26" y="-184" width="16" height="4" rx="2" fill="#cfdae6" transform="rotate(-14 -26 -184)"/>
+    <rect x="-7"  y="-187" width="16" height="4" rx="2" fill="#cfdae6" transform="rotate(-5 -7 -187)"/>
+    <path d="M -37,-165 Q -38,-130 -5,-120" stroke="#3a4652" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <circle cx="-5" cy="-121" r="3.4" fill="#3a4652"/>
+
+    <!-- 五官 -->
+    <ellipse cx="-16" cy="-156" rx="11" ry="13" fill="#2b2b2b" transform="rotate(-18 -16 -156)"/>
+    <ellipse cx="6"  cy="-158" rx="10.5" ry="12.5" fill="#2b2b2b" transform="rotate(-18 6 -158)"/>
+    <circle cx="-14" cy="-157" r="4.4" fill="#ffffff"/>
+    <circle cx="-13" cy="-157" r="2.6" fill="#1b1b1b"/>
+    <circle cx="8"  cy="-159" r="4.2" fill="#ffffff"/>
+    <circle cx="9"  cy="-159" r="2.5" fill="#1b1b1b"/>
+    <ellipse cx="14" cy="-144" rx="5.2" ry="3.8" fill="#2b2b2b"/>
+    <path d="M 7,-134 q 4,4 8,0" stroke="#2b2b2b" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-2" cy="-137" rx="5" ry="3.4" fill="#ffb3c4" opacity="0.75"/>
+  </g>
+
+  <!-- ===== 送达气泡 ===== -->
+  <g id="bubble" opacity="0">
+    <g id="bubbleInner">
+      <g filter="url(#soft)">
+        <rect x="100" y="106" width="300" height="88" rx="24" fill="#ffffff"/>
+        <path d="M 226,190 L 254,190 L 236,240 Z" fill="#ffffff"/>
+      </g>
+      <circle cx="104" cy="110" r="18" fill="#2e9e5b" stroke="#ffffff" stroke-width="4"/>
+      <path d="M 96,110 l 6,7 l 12,-14" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="250" y="162" text-anchor="middle" font-size="34" font-weight="800" fill="#e2542b" letter-spacing="1">外卖已送达！</text>
+    </g>
+    <g id="sparks">
+      <g id="spark0"><use href="#star4" fill="#ffcf3d"/></g>
+      <g id="spark1"><use href="#star4" fill="#ff8a5b"/></g>
+      <g id="spark2"><use href="#star4" fill="#7ec8f0"/></g>
+      <g id="spark3"><use href="#star4" fill="#ffcf3d"/></g>
+    </g>
+  </g>
+</svg>
+</div>
+
+<div class="bar">
+  <button id="replay" type="button">重新播放</button>
+  <span class="hint">动画结束即停在原地，不会自动重播</span>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------------- 商铺 ---------------- */
+  var SHOPS = [
+    { x: -240, h: 226, wall:'#f8e3cd', trim:'#dcbb95', sign:'#c0392b', name:'老街面馆',     aw1:'#c0392b', aw2:'#fff6ea', glass:'#bfe2ef' },
+    { x:   60, h: 234, wall:'#e8f6e3', trim:'#a9d0a1', sign:'#2e9e5b', name:'鲜果时光',     aw1:'#2e9e5b', aw2:'#f4fff2', glass:'#c9ecd9' },
+    { x:  360, h: 222, wall:'#e4edf9', trim:'#abc1db', sign:'#2563a8', name:'好邻居便利店', aw1:'#2563a8', aw2:'#f2f8ff', glass:'#c9dcf2' },
+    { x:  660, h: 232, wall:'#efe6f7', trim:'#c4afe0', sign:'#6d4b9e', name:'星河咖啡',     aw1:'#6d4b9e', aw2:'#f8f2ff', glass:'#d8c9ec' },
+    { x:  960, h: 228, wall:'#fde6ef', trim:'#e4b0c6', sign:'#d6558a', name:'花间集',       aw1:'#d6558a', aw2:'#fff4f8', glass:'#f2d3e0' },
+    { x: 1260, h: 236, wall:'#fdf0da', trim:'#e2c99d', sign:'#d68910', name:'麦香烘焙',     aw1:'#d68910', aw2:'#fffaf0', glass:'#f5e3c0' },
+    { x: 1560, h: 220, wall:'#e8eef0', trim:'#b8c8cd', sign:'#2f7f8f', name:'叮咚药房',     aw1:'#2f7f8f', aw2:'#f2fbfc', glass:'#cde6ea' },
+    { x: 1860, h: 230, wall:'#f2e9e0', trim:'#cfbba5', sign:'#8a5a3b', name:'老张修车',     aw1:'#8a5a3b', aw2:'#faf3ec', glass:'#d8d0c4' }
+  ];
+
+  function shopSVG(c) {
+    var w = 260, top = 340 - c.h;
+    var sy = top + 16, wy = top + 76;
+    var AY = 240;
+    var out = '';
+    out += '<g transform="translate(' + c.x + ',0)">';
+    /* 楼体之间的暗缝 */
+    out += '<rect x="-40" y="' + top + '" width="41" height="' + c.h + '" fill="#c9d0d9"/>';
+    out += '<rect x="-40" y="' + top + '" width="7" height="' + c.h + '" fill="#aeb7c2"/>';
+    /* 楼体 + 檐口 */
+    out += '<rect x="0" y="' + top + '" width="' + w + '" height="' + c.h + '" fill="' + c.wall + '"/>';
+    out += '<rect x="-7" y="' + (top - 13) + '" width="' + (w + 14) + '" height="17" rx="4" fill="' + c.trim + '"/>';
+    /* 招牌 */
+    out += '<rect x="12" y="' + sy + '" width="' + (w - 24) + '" height="48" rx="7" fill="' + c.sign + '"/>';
+    out += '<rect x="12" y="' + sy + '" width="' + (w - 24) + '" height="48" rx="7" fill="none" stroke="rgba(0,0,0,.16)" stroke-width="2"/>';
+    out += '<text x="' + (w / 2) + '" y="' + (sy + 34) + '" text-anchor="middle" font-size="' +
+           (c.name.length > 5 ? 22 : 27) + '" font-weight="800" fill="#ffffff" letter-spacing="1.5">' + c.name + '</text>';
+    out += '<rect x="12" y="' + (sy + 48) + '" width="' + (w - 24) + '" height="3" fill="rgba(0,0,0,.12)"/>';
+    /* 二楼窗 */
+    [18, 102, 186].forEach(function (wx) {
+      out += '<rect x="' + wx + '" y="' + wy + '" width="56" height="40" rx="3" fill="#ffffff"/>';
+      out += '<rect x="' + (wx + 3) + '" y="' + (wy + 3) + '" width="50" height="34" rx="2" fill="' + c.glass + '"/>';
+      out += '<rect x="' + (wx + 26) + '" y="' + (wy + 3) + '" width="3" height="34" fill="#ffffff" opacity=".85"/>';
+      out += '<path d="M' + (wx + 6) + ',' + (wy + 6) + ' l18,0 l-18,16 z" fill="#ffffff" opacity=".5"/>';
+    });
+    /* 橱窗 */
+    out += '<rect x="14" y="252" width="152" height="88" rx="3" fill="' + c.trim + '"/>';
+    out += '<rect x="18" y="256" width="144" height="78" rx="2" fill="' + c.glass + '"/>';
+    out += '<rect x="18" y="256" width="144" height="78" rx="2" fill="#ffffff" opacity=".18"/>';
+    out += '<rect x="26" y="266" width="60" height="5" rx="2.5" fill="#ffffff" opacity=".55"/>';
+    out += '<rect x="26" y="280" width="92" height="5" rx="2.5" fill="#ffffff" opacity=".4"/>';
+    out += '<path d="M24,330 L52,262 L74,262 L40,330 Z" fill="#ffffff" opacity=".28"/>';
+    /* 门 */
+    out += '<rect x="174" y="250" width="72" height="90" rx="3" fill="' + c.trim + '"/>';
+    out += '<rect x="179" y="255" width="62" height="85" rx="2" fill="' + c.glass + '"/>';
+    out += '<rect x="179" y="255" width="62" height="85" rx="2" fill="#1a2b3a" opacity=".1"/>';
+    out += '<circle cx="233" cy="300" r="3" fill="#ffffff" opacity=".9"/>';
+    /* 门口绿植 */
+    out += '<rect x="238" y="320" width="15" height="20" rx="3" fill="#c98b6b"/>';
+    out += '<circle cx="245" cy="312" r="11" fill="#7fbf8b"/>';
+    out += '<circle cx="239" cy="316" r="7" fill="#6fb37c"/>';
+    /* 雨棚（压在橱窗之上） */
+    out += '<rect x="-9" y="' + AY + '" width="' + (w + 18) + '" height="20" rx="4" fill="' + c.aw2 + '"/>';
+    for (var sx = 0; sx < w; sx += 36) {
+      out += '<rect x="' + sx + '" y="' + (AY + 2) + '" width="18" height="16" fill="' + c.aw1 + '" opacity=".8"/>';
+    }
+    out += '<rect x="-9" y="' + (AY + 18) + '" width="' + (w + 18) + '" height="5" rx="2.5" fill="rgba(0,0,0,.07)"/>';
+    out += '<rect x="-9" y="' + AY + '" width="' + (w + 18) + '" height="1.5" fill="rgba(255,255,255,.5)"/>';
+    /* 踢脚 */
+    out += '<rect x="0" y="336" width="' + w + '" height="4" fill="rgba(0,0,0,.09)"/>';
+    out += '</g>';
+    return out;
+  }
+
+  document.getElementById('shops').innerHTML = SHOPS.map(shopSVG).join('');
+
+  /* ---------------- 行道树 ---------------- */
+  var TREES = [340, 940, 1540, 2150];
+  document.getElementById('trees').innerHTML = TREES.map(function (tx) {
+    return '<g transform="translate(' + tx + ',0)">' +
+      '<rect x="-4.5" y="248" width="9" height="94" rx="4" fill="#9c7d60"/>' +
+      '<circle cx="0" cy="236" r="31" fill="#7fc08a"/>' +
+      '<circle cx="-17" cy="250" r="20" fill="#6cb178"/>' +
+      '<circle cx="17" cy="250" r="18" fill="#8fd09a"/>' +
+      '<circle cx="4" cy="222" r="18" fill="#8fd09a"/>' +
+      '</g>';
+  }).join('');
+
+  /* ---------------- 路面与地砖纹理 ---------------- */
+  var seams = '', dashes = '', i, x;
+  for (x = -320; x < 3120; x += 56) {
+    seams += '<line x1="' + x + '" y1="340" x2="' + x + '" y2="396" stroke="#d3dae3" stroke-width="2"/>';
+  }
+  for (x = -320; x < 3120; x += 64) {
+    dashes += '<rect x="' + x + '" y="422" width="36" height="6" rx="3" fill="#ffffff" opacity=".62"/>';
+  }
+  for (x = -320; x < 3120; x += 64) {
+    dashes += '<rect x="' + (x + 24) + '" y="496" width="42" height="7" rx="3.5" fill="#ffffff" opacity=".8"/>';
+  }
+  document.getElementById('seams').innerHTML = seams;
+  document.getElementById('dashes').innerHTML = dashes;
+
+  /* ---------------- 时间轴 ---------------- */
+  var DIST  = 2120;      // 镜头总位移
+  var T_ACC = 1200;      // 加速
+  var T_CRU = 11000;     // 匀速
+  var T_DEC = 2400;      // 减速
+  var T_TRAVEL = T_ACC + T_CRU + T_DEC;      // 14600
+  var V = DIST / (T_ACC / 2 + T_CRU + T_DEC / 2);   // 峰值速度 px/ms
+  var T_BUBBLE = T_TRAVEL + 260;
+  var T_END = T_TRAVEL + 4200;
+
+  function offsetAt(t) {
+    if (t <= 0) return 0;
+    if (t < T_ACC) return 0.5 * V * t * t / T_ACC;
+    if (t < T_ACC + T_CRU) return 0.5 * V * T_ACC + V * (t - T_ACC);
+    var u = Math.min(t - T_ACC - T_CRU, T_DEC);
+    return 0.5 * V * T_ACC + V * T_CRU + V * u - 0.5 * V * u * u / T_DEC;
+  }
+
+  function speedAt(t) {
+    if (t <= 0) return 0;
+    if (t < T_ACC) return V * t / T_ACC;
+    if (t < T_ACC + T_CRU) return V;
+    var u = Math.min(t - T_ACC - T_CRU, T_DEC);
+    return V * (1 - u / T_DEC);
+  }
+
+  function easeOutBack(x) {
+    var c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+  }
+
+  /* ---------------- 元素引用 ---------------- */
+  var world      = document.getElementById('world');
+  var clouds     = document.getElementById('clouds');
+  var rider      = document.getElementById('rider');
+  var wheelF     = document.getElementById('wheelF');
+  var wheelB     = document.getElementById('wheelB');
+  var speedLines = document.getElementById('speedLines');
+  var bubble     = document.getElementById('bubble');
+  var bubbleInner= document.getElementById('bubbleInner');
+  var sparkEls   = [
+    { el: document.getElementById('spark0'), x: 74,  y: 152, s: 1.05 },
+    { el: document.getElementById('spark1'), x: 428, y: 132, s: 0.85 },
+    { el: document.getElementById('spark2'), x: 340, y: 78,  s: 0.95 },
+    { el: document.getElementById('spark3'), x: 150, y: 68,  s: 0.7  }
+  ];
+
+  /* ---------------- 渲染 ---------------- */
+  function render(t) {
+    var off = offsetAt(t);
+    var v = speedAt(t);
+    var cruise = Math.min(1, Math.max(0, v / (V * 0.96)));
+
+    world.setAttribute('transform', 'translate(' + (-off).toFixed(2) + ',0)');
+    clouds.setAttribute('transform', 'translate(' + (-off * 0.22).toFixed(2) + ',0)');
+
+    /* 车轮按行进距离转动 */
+    var deg = off / 21 * 180 / Math.PI;
+    wheelF.setAttribute('transform', 'rotate(' + deg.toFixed(1) + ')');
+    wheelB.setAttribute('transform', 'rotate(' + deg.toFixed(1) + ')');
+
+    /* 车身起伏 + 加减速俯仰 */
+    var bob = Math.sin(t / 95) * 1.7 * cruise;
+    var tilt = 0;
+    if (t < T_ACC) tilt = -2.0 * cruise;
+    else if (t > T_ACC + T_CRU) tilt = 2.2 * cruise;
+    rider.setAttribute('transform',
+      'translate(250,' + (464 + bob).toFixed(2) + ') rotate(' + tilt.toFixed(2) + ',0,0) scale(1.15)');
+
+    /* 速度线：静止拖影，只随车速淡入淡出 */
+    if (cruise > 0.03) {
+      speedLines.setAttribute('opacity', (0.12 + 0.74 * cruise).toFixed(2));
+    } else {
+      speedLines.setAttribute('opacity', '0');
+    }
+
+    /* 送达气泡 */
+    if (t >= T_BUBBLE) {
+      var p = Math.min(1, (t - T_BUBBLE) / 620);
+      var s = easeOutBack(p);
+      bubble.setAttribute('opacity', '1');
+      bubbleInner.setAttribute('transform',
+        'translate(250,194) scale(' + s.toFixed(3) + ') translate(-250,-194)');
+    } else {
+      bubble.setAttribute('opacity', '0');
+    }
+
+    /* 小星星 */
+    for (var i = 0; i < sparkEls.length; i++) {
+      var sp = sparkEls[i];
+      var dt = t - T_BUBBLE - (140 + i * 110);
+      var tp = Math.max(0, Math.min(1, dt / 480));
+      if (tp <= 0) { sp.el.setAttribute('opacity', '0'); continue; }
+      var ss = easeOutBack(tp) * sp.s;
+      var rot = (i % 2 === 0 ? 1 : -1) * (tp * 40);
+      var twinkle = 0.72 + 0.28 * Math.abs(Math.sin((t + i * 400) / 620));
+      sp.el.setAttribute('opacity', (tp * twinkle).toFixed(2));
+      sp.el.setAttribute('transform',
+        'translate(' + sp.x + ',' + sp.y + ') rotate(' + rot.toFixed(1) + ') scale(' + ss.toFixed(3) + ')');
+    }
+  }
+
+  /* ---------------- 播放控制（不自动重播） ---------------- */
+  var rafId = null, startTime = null;
+
+  function tick(now) {
+    if (startTime === null) startTime = now;
+    var t = now - startTime;
+    render(Math.min(t, T_END));
+    if (t < T_END) {
+      rafId = requestAnimationFrame(tick);
+    } else {
+      rafId = null;   /* 结束即停，绝不自动重播 */
+    }
+  }
+
+  function play() {
+    if (rafId !== null) cancelAnimationFrame(rafId);
+    rafId = null;
+    startTime = null;
+    render(0);
+    rafId = requestAnimationFrame(tick);
+  }
+
+  document.getElementById('replay').addEventListener('click', play);
+
+  play();   /* 首次播放；之后只由用户手动触发 */
+})();
+</script>
+</body>
+</html>

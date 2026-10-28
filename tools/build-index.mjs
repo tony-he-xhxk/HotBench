@@ -9,6 +9,8 @@
      <project>/<project>.<model>.<harness>.<attempt>/      一次实测（内含同名 .html）
                                                           里面放同名 .png 截图的话，
                                                           卡片就显示截图、点击在新标签页打开
+                                                          只有同名 .dump.txt 时视为异常轮次，
+                                                          卡片显示异常原因
 
    说明：model 字段允许包含点号（例如 gpt-5.6-luna），脚本从右往左解析：
    最后一段是第几次尝试，倒数第二段是 harness，剩下的是 model。
@@ -156,6 +158,25 @@ function findShot(runDir, runName) {
   return found ? join(runDir, found.name) : null;
 }
 
+/* 异常轮次：目录里没有 html，只有 <run>.dump.txt */
+function findDump(runDir, runName) {
+  const preferred = join(runDir, runName + '.dump.txt');
+  if (existsSync(preferred)) return preferred;
+  const found = readdirSync(runDir).find((name) => name.toLowerCase().endsWith('.dump.txt'));
+  return found ? join(runDir, found) : null;
+}
+
+/* 预览框里只放前两句，完整内容在放大弹层里显示 */
+function excerptText(text, max) {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  const parts = clean.match(/[^。！？!?]+[。！？!?]?/g) || [];
+  let out = '';
+  for (let i = 0; i < parts.length && i < 2; i += 1) out += parts[i];
+  if (!out) out = clean;
+  if (out.length > max) out = out.slice(0, max);
+  return out.length < clean.length ? out + '…' : out;
+}
+
 function parseRunDir(projectId, dirName) {
   if (!dirName.startsWith(projectId + '.')) return null;
   const parts = dirName.slice(projectId.length + 1).split('.');
@@ -199,26 +220,61 @@ function scan() {
           console.warn('! 跳过（超过 ' + chances + ' 次机会）：' + dirName);
           return;
         }
-        const html = findHtml(join(projectDir, dirName), dirName);
-        if (!html) {
-          console.warn('! 跳过（目录里没有 html）：' + dirName);
+        const runDir = join(projectDir, dirName);
+        const html = findHtml(runDir, dirName);
+        const dump = html ? null : findDump(runDir, dirName);
+        if (!html && !dump) {
+          console.warn('! 跳过（目录里没有 html 或 dump）：' + dirName);
           return;
         }
-        const shot = findShot(join(projectDir, dirName), dirName);
         const run = {
           id: parsed.model + '.' + parsed.harness + '.' + parsed.attempt,
           model: parsed.model,
           harness: parsed.harness,
-          attempt: parsed.attempt,
-          file: toUrl(html)
+          attempt: parsed.attempt
         };
-        if (shot) run.shot = toUrl(shot);
+        if (html) {
+          run.file = toUrl(html);
+          const shot = findShot(runDir, dirName);
+          if (shot) run.shot = toUrl(shot);
+        } else {
+          const text = readFileSync(dump, 'utf8').trim();
+          run.abnormal = true;
+          run.dump = text;
+          run.dumpExcerpt = excerptText(text, 110);
+        }
         runs.push(run);
         if (!modelLabels[parsed.model]) modelLabels[parsed.model] = parsed.model;
         if (!harnessLabels[parsed.harness]) {
           harnessLabels[parsed.harness] = titleCase(parsed.harness);
         }
       });
+
+      /* 连续两轮异常 → 第三轮视为放弃参赛（只有允许 3 次机会的黄金题会遇到） */
+      if (chances >= 3) {
+        const grouped = new Map();
+        runs.forEach((run) => {
+          const key = run.model + '.' + run.harness;
+          if (!grouped.has(key)) {
+            grouped.set(key, { model: run.model, harness: run.harness, attempts: {} });
+          }
+          grouped.get(key).attempts[run.attempt] = run;
+        });
+        grouped.forEach((entry, key) => {
+          const first = entry.attempts[1];
+          const second = entry.attempts[2];
+          if (first && first.abnormal && second && second.abnormal && !entry.attempts[3]) {
+            runs.push({
+              id: key + '.3',
+              model: entry.model,
+              harness: entry.harness,
+              attempt: 3,
+              forfeit: true,
+              message: '由于前两轮模型均在异常状态，第三轮视为放弃参赛。'
+            });
+          }
+        });
+      }
 
       runs.sort((a, b) =>
         a.model.localeCompare(b.model) ||

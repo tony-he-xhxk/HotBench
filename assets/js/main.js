@@ -17,7 +17,7 @@
   var TIERS = {
     bronze: { label: '青铜', className: 'tier-bronze' },
     silver: { label: '白银', className: 'tier-silver' },
-    gold: { label: '金牌', className: 'tier-gold' }
+    gold: { label: '黄金', className: 'tier-gold' }
   };
 
   var el = {
@@ -119,19 +119,15 @@
     var total = 0;
 
     entries.forEach(function (entry) {
-      var first = null;
-      var second = null;
-      entry.runs.forEach(function (run) {
-        if (run.attempt === 1) first = run;
-        else if (run.attempt === 2 && !second) second = run;
-      });
-      if (!first) first = entry.runs[0] || null;
+      var byAttempt = {};
+      entry.runs.forEach(function (run) { byAttempt[run.attempt] = run; });
 
-      if (chances >= 2) {
-        if (isCorrect(first)) total += 2;
-        else if (isCorrect(second)) total += 1;
-      } else if (isCorrect(first)) {
-        total += 1;
+      /* 第 N 轮才做对 → 得 (剩余机会 + 1) 分：青铜 1 分、白银 2/1、黄金 3/2/1 */
+      for (var attempt = 1; attempt <= chances; attempt += 1) {
+        if (isCorrect(byAttempt[attempt])) {
+          total += chances - attempt + 1;
+          break;
+        }
       }
     });
 
@@ -157,15 +153,28 @@
 
   function previewCard(entry, run) {
     var title = entry.title + ' · 第 ' + run.attempt + ' 次';
-    /* 有截图就展示截图，点击在新标签页打开；没有就实时预览 + 点击放大 */
-    var stage = run.shot
-      ? '<a class="shot shot-link" href="' + escapeHtml(run.file) + '" target="_blank" rel="noopener" ' +
+    /* 异常 / 放弃：淡红底深红字，点击看完整文本；截图：点击新标签页；其余：实时预览 + 放大 */
+    var stage;
+
+    if (run.abnormal || run.forfeit) {
+      var preview = run.forfeit
+        ? String(run.message || '')
+        : String(run.dumpExcerpt || run.dump || '');
+      var full = run.forfeit ? preview : String(run.dump || preview);
+      stage = '<button class="shot shot-abnormal" type="button" data-title="' + escapeHtml(title) +
+        '" data-dump="' + escapeHtml(full).replace(/\r?\n/g, '&#10;') + '">' +
+        '<span class="dump-preview">' + escapeHtml(preview) + '</span>' +
+        '<span class="shot-zoom">点击查看完整内容</span>' +
+      '</button>';
+    } else if (run.shot) {
+      stage = '<a class="shot shot-link" href="' + escapeHtml(run.file) + '" target="_blank" rel="noopener" ' +
           'aria-label="在新标签页打开 ' + escapeHtml(title) + '">' +
           '<img class="shot-img" src="' + escapeHtml(run.shot) + '" alt="' + escapeHtml(title) +
             '" loading="lazy" decoding="async">' +
           '<span class="shot-zoom">在新标签页打开</span>' +
-        '</a>'
-      : '<div class="shot">' +
+        '</a>';
+    } else {
+      stage = '<div class="shot">' +
           '<iframe class="shot-frame" data-src="' + escapeHtml(run.file) + '" title="' +
             escapeHtml(title) + '" scrolling="no" loading="lazy"></iframe>' +
           '<button class="shot-mask" type="button" data-file="' + escapeHtml(run.file) +
@@ -173,6 +182,7 @@
             '<span class="shot-zoom">点击放大</span>' +
           '</button>' +
         '</div>';
+    }
 
     return '' +
       '<figure class="preview" data-run="' + escapeHtml(run.id || '') + '">' +
@@ -467,9 +477,24 @@
 
   function openLightbox(file, title) {
     el.lbTitle.textContent = title || '';
+    el.lbOpen.hidden = false;
     el.lbOpen.setAttribute('href', file);
     el.lbBody.innerHTML = '<iframe src="' + escapeHtml(file) + '" title="' +
       escapeHtml(title || '') + '"></iframe>';
+    el.lightbox.hidden = false;
+    document.body.classList.add('lightbox-open');
+    el.lbClose.focus();
+  }
+
+  /* 异常文本：放大后显示完整内容，不提供「在新标签页打开」 */
+  function openLightboxText(title, text) {
+    el.lbTitle.textContent = title || '';
+    el.lbOpen.hidden = true;
+    el.lbBody.innerHTML = '';
+    var box = document.createElement('div');
+    box.className = 'dump-full';
+    box.textContent = text || '';
+    el.lbBody.appendChild(box);
     el.lightbox.hidden = false;
     document.body.classList.add('lightbox-open');
     el.lbClose.focus();
@@ -623,6 +648,12 @@
 
   /* 事件委托：点预览图放大 */
   el.projects.addEventListener('click', function (event) {
+    var dump = event.target.closest ? event.target.closest('.shot-abnormal') : null;
+    if (dump) {
+      openLightboxText(dump.getAttribute('data-title'), dump.getAttribute('data-dump'));
+      return;
+    }
+
     var mask = event.target.closest ? event.target.closest('.shot-mask') : null;
     if (!mask) return;
     openLightbox(mask.getAttribute('data-file'), mask.getAttribute('data-title'));

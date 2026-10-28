@@ -360,6 +360,26 @@ button { font-family: inherit; }
   object-fit: cover;
   object-position: top center;
 }
+
+/* 异常轮次 / 放弃参赛：淡红底、深红字 */
+.shot-abnormal {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  padding: 22px 26px;
+  background: #fff1f0;
+  border-color: #f3c9c6;
+  color: #a12622;
+  text-align: left;
+  cursor: zoom-in;
+  font-size: 13.5px;
+  line-height: 1.85;
+}
+.shot-abnormal .dump-preview { white-space: pre-wrap; word-break: break-word; }
+.shot-abnormal .shot-zoom { position: absolute; right: 0; bottom: 0; }
+.shot-abnormal:focus-visible { outline: 2px solid #d64545; outline-offset: -2px; }
+.preview:hover .shot-abnormal { border-color: #e7a9a4; }
 .shot-zoom {
   margin: 10px;
   font-size: 12px;
@@ -514,6 +534,17 @@ button { font-family: inherit; }
   border: 0;
   display: block;
   background: #fff;
+}
+.lightbox-body .dump-full {
+  height: 100%;
+  overflow: auto;
+  padding: 26px 30px;
+  background: #fff1f0;
+  color: #a12622;
+  font-size: 15px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 body.lightbox-open { overflow: hidden; }

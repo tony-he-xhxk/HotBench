@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a3d">
+  <title>熊猫急送 · 外卖已送达</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17324d;
+      --cream: #fff8e9;
+      --orange: #ff7a3d;
+      --teal: #0d7076;
+      --shadow: rgba(5, 25, 42, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(255, 173, 97, 0.22), transparent 28rem),
+        radial-gradient(circle at 85% 90%, rgba(23, 162, 184, 0.2), transparent 32rem),
+        #102332;
+      color: #f8fbfd;
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC",
+        "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .player {
+      width: min(1500px, calc(100vw - 48px));
+    }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      border-radius: 30px;
+      background: #b9e4ef;
+      box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.38),
+        0 2px 0 rgba(255, 255, 255, 0.18) inset;
+      isolation: isolate;
+    }
+
+    .scene {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .controls {
+      position: absolute;
+      z-index: 3;
+      left: 22px;
+      right: 22px;
+      bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      pointer-events: none;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid rgba(255, 255, 255, 0.46);
+      border-radius: 999px;
+      background: rgba(14, 38, 57, 0.82);
+      box-shadow: 0 9px 26px rgba(8, 24, 36, 0.24);
+      color: #f8fbfd;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: #ffca5c;
+      box-shadow: 0 0 0 4px rgba(255, 202, 92, 0.16);
+    }
+
+    .stage[data-state="complete"] .status-dot {
+      background: #7be1b2;
+      box-shadow: 0 0 0 4px rgba(123, 225, 178, 0.16);
+    }
+
+    .replay-button {
+      pointer-events: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 48px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 999px;
+      background: #ff7a3d;
+      box-shadow:
+        0 12px 30px rgba(32, 34, 35, 0.28),
+        0 1px 0 rgba(255, 255, 255, 0.3) inset;
+      color: #fff;
+      font: 800 15px/1 "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(10px);
+      transition:
+        opacity 220ms ease,
+        transform 220ms ease,
+        background-color 180ms ease;
+    }
+
+    .stage[data-state="complete"] .replay-button {
+      pointer-events: auto;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .replay-button:hover {
+      background: #ff8f58;
+    }
+
+    .replay-button:focus-visible {
+      outline: 3px solid #fff;
+      outline-offset: 4px;
+    }
+
+    .replay-button svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .caption {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin: 14px 5px 0;
+      color: rgba(240, 247, 250, 0.76);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .caption strong {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Scene typography */
+    .scene text {
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC",
+        "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+      user-select: none;
+    }
+
+    .shop-sign-text {
+      font-weight: 900;
+      letter-spacing: 0.08em;
+    }
+
+    .shop-detail {
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .window-pane {
+      transition: fill 420ms ease;
+    }
+
+    .scene.is-complete .lit-window {
+      fill: #ffd476;
+    }
+
+    .scene.is-complete .door-glow {
+      opacity: 0.9;
+    }
+
+    #arrival {
+      opacity: 0;
+    }
+
+    .scene.is-complete #arrival {
+      opacity: 1;
+    }
+
+    .arrival-card {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .scene.is-complete .arrival-card {
+      animation: arrival-pop 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .arrival-confetti {
+      opacity: 0;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .scene.is-complete .arrival-confetti {
+      animation: confetti-pop 520ms ease-out both;
+    }
+
+    .scene.is-complete .arrival-confetti:nth-of-type(2n) {
+      animation-delay: 90ms;
+    }
+
+    .scene.is-complete .arrival-confetti:nth-of-type(3n) {
+      animation-delay: 160ms;
+    }
+
+    @keyframes arrival-pop {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.94);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes confetti-pop {
+      0% {
+        opacity: 0;
+        transform: scale(0.2) rotate(-18deg);
+      }
+      70% {
+        opacity: 1;
+        transform: scale(1.16) rotate(8deg);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) rotate(0);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        padding: 10px;
+      }
+
+      .player {
+        width: calc(100vw - 20px);
+      }
+
+      .stage {
+        border-radius: 18px;
+      }
+
+      .controls {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+      }
+
+      .status-pill {
+        min-height: 34px;
+        padding: 0 12px;
+        font-size: 11px;
+      }
+
+      .replay-button {
+        min-height: 40px;
+        padding: 0 14px;
+        font-size: 12px;
+      }
+
+      .caption {
+        margin-top: 10px;
+        font-size: 11px;
+      }
+
+      .caption span:last-child {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .scene.is-complete .arrival-card,
+      .scene.is-complete .arrival-confetti {
+        animation-duration: 1ms;
+        animation-delay: 0ms;
+      }
+
+      .replay-button {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="player" aria-labelledby="pageTitle">
+      <div class="stage" id="stage" data-state="playing">
+        <svg
+          class="scene"
+          id="scene"
+          viewBox="0 0 1600 900"
+          preserveAspectRatio="xMidYMid slice"
+          role="img"
+          aria-labelledby="sceneTitle sceneDesc"
+        >
+          <title id="sceneTitle">熊猫骑电动车送外卖的 2D 动画</title>
+          <desc id="sceneDesc">
+            熊猫戴好扣紧的安全头盔，穿着反光背心，骑着亮灯的外卖电动车，
+            沿街依次经过九家商铺，最后停在松风雅苑三栋楼下。画面显示“外卖已送达！”。
+          </desc>
+
+          <defs>
+            <linearGradient id="skyGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#84cfe8"/>
+              <stop offset="0.62" stop-color="#c9ebef"/>
+              <stop offset="1" stop-color="#f8e4bd"/>
+            </linearGradient>
+            <linearGradient id="roadGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#687b88"/>
+              <stop offset="1" stop-color="#374d5f"/>
+            </linearGradient>
+            <linearGradient id="apartmentGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f4d5b3"/>
+              <stop offset="1" stop-color="#d89e7d"/>
+            </linearGradient>
+            <linearGradient id="glassGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#bfeaf4" stop-opacity="0.96"/>
+              <stop offset="0.55" stop-color="#77b8ca" stop-opacity="0.86"/>
+              <stop offset="1" stop-color="#4d879d" stop-opacity="0.92"/>
+            </linearGradient>
+            <linearGradient id="boxGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ff9955"/>
+              <stop offset="1" stop-color="#e9552c"/>
+            </linearGradient>
+            <linearGradient id="helmetGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#ffb44c"/>
+              <stop offset="1" stop-color="#f0642f"/>
+            </linearGradient>
+            <radialGradient id="sunGlow">
+              <stop offset="0" stop-color="#fff7c5" stop-opacity="0.95"/>
+              <stop offset="1" stop-color="#fff1ba" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="headlightGlow">
+              <stop offset="0" stop-color="#fff5a9" stop-opacity="0.9"/>
+              <stop offset="1" stop-color="#fff5a9" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="softShadow" x="-25%" y="-25%" width="150%" height="170%">
+              <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#122b3b" flood-opacity="0.22"/>
+            </filter>
+            <filter id="smallShadow" x="-30%" y="-30%" width="160%" height="180%">
+              <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#0b2839" flood-opacity="0.24"/>
+            </filter>
+            <filter id="glowBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="18"/>
+            </filter>
+            <pattern id="orangeAwning" width="42" height="42" patternUnits="userSpaceOnUse">
+              <rect width="21" height="42" fill="#f2814d"/>
+              <rect x="21" width="21" height="42" fill="#fff1d5"/>
+            </pattern>
+            <pattern id="tealAwning" width="42" height="42" patternUnits="userSpaceOnUse">
+              <rect width="21" height="42" fill="#11747a"/>
+              <rect x="21" width="21" height="42" fill="#d8f0e9"/>
+            </pattern>
+            <pattern id="roseAwning" width="42" height="42" patternUnits="userSpaceOnUse">
+              <rect width="21" height="42" fill="#d96983"/>
+              <rect x="21" width="21" height="42" fill="#fff1e8"/>
+            </pattern>
+            <pattern id="sidewalkTiles" width="86" height="68" patternUnits="userSpaceOnUse">
+              <rect width="86" height="68" fill="#ddcfb5"/>
+              <path d="M0 0H86M0 0V68" stroke="#c8b897" stroke-width="2" opacity="0.62"/>
+            </pattern>
+            <clipPath id="sceneClip">
+              <rect width="1600" height="900" rx="28"/>
+            </clipPath>
+            <clipPath id="worldClip">
+              <rect width="1600" height="654"/>
+            </clipPath>
+          </defs>
+
+          <g clip-path="url(#sceneClip)">
+            <!-- Sky and distant city -->
+            <rect width="1600" height="900" fill="url(#skyGradient)"/>
+            <circle cx="1340" cy="150" r="158" fill="url(#sunGlow)"/>
+            <circle cx="1340" cy="150" r="60" fill="#fff0a8" opacity="0.74"/>
+
+            <g id="clouds" opacity="0.82">
+              <g fill="#ffffff">
+                <ellipse cx="250" cy="145" rx="78" ry="28"/>
+                <circle cx="210" cy="135" r="35"/>
+                <circle cx="260" cy="118" r="49"/>
+                <circle cx="312" cy="140" r="31"/>
+              </g>
+              <g fill="#ffffff" opacity="0.76">
+                <ellipse cx="820" cy="104" rx="100" ry="27"/>
+                <circle cx="770" cy="98" r="32"/>
+                <circle cx="830" cy="79" r="48"/>
+                <circle cx="890" cy="99" r="34"/>
+              </g>
+              <g fill="#ffffff" opacity="0.58">
+                <ellipse cx="1490" cy="252" rx="98" ry="23"/>
+                <circle cx="1444" cy="243" r="29"/>
+                <circle cx="1497" cy="225" r="42"/>
+                <circle cx="1551" cy="245" r="28"/>
+              </g>
+            </g>
+
+            <g id="farCity" opacity="0.52">
+              <path d="M0 535V420h90v-82h75v102h70V344h112v94h82V377h113v66h104V305h78v142h90V369h112v74h91V312h89v126h90V383h104v69h94V350h96v185Z" fill="#6ea6b4"/>
+              <path d="M0 545V475h130v-39h93v37h118v-57h116v75h126v-46h153v87h137v-66h152v61h126v-55h121v60h128v-83h100v144Z" fill="#5d96a6" opacity="0.72"/>
+              <g fill="#f8e2ac" opacity="0.54">
+                <rect x="56" y="466" width="16" height="23" rx="2"/>
+                <rect x="142" y="446" width="14" height="20" rx="2"/>
+                <rect x="348" y="431" width="18" height="22" rx="2"/>
+                <rect x="522" y="440" width="14" height="20" rx="2"/>
+                <rect x="760" y="397" width="16" height="24" rx="2"/>
+                <rect x="980" y="421" width="18" height="20" rx="2"/>
+                <rect x="1221" y="455" width="15" height="21" rx="2"/>
+                <rect x="1450" y="426" width="17" height="22" rx="2"/>
+              </g>
+            </g>
+
+            <path d="M0 565C130 531 216 552 326 540c128-14 214-48 350-31 167 21 273 57 421 35 144-21 248-60 503-34v108H0Z" fill="#92b8ad" opacity="0.42"/>
+
+            <!-- Moving commercial street -->
+            <g id="world">
+              <!-- Shop 01: 小满早餐 -->
+              <g transform="translate(90 0)" aria-label="小满早餐店">
+                <rect x="0" y="322" width="300" height="318" rx="8" fill="#f3c982"/>
+                <rect x="12" y="324" width="276" height="16" rx="5" fill="#dc9f5b"/>
+                <rect x="20" y="236" width="260" height="93" rx="16" fill="#fff0cf" filter="url(#smallShadow)"/>
+                <rect x="31" y="247" width="238" height="71" rx="11" fill="#f37a3f"/>
+                <circle cx="62" cy="282" r="20" fill="#ffe8ad"/>
+                <path d="M53 282c6-12 12-12 18 0-6 8-12 8-18 0Z" fill="#e86c35"/>
+                <text x="161" y="291" text-anchor="middle" fill="#fff9ec" font-size="29" class="shop-sign-text">小满早餐</text>
+                <path d="M21 350h258l-13 37-23-17-23 17-23-17-23 17-23-17-23 17-23-17-23 17Z" fill="url(#orangeAwning)"/>
+                <rect x="36" y="406" width="142" height="126" rx="8" fill="#8f623f"/>
+                <rect x="45" y="415" width="124" height="105" rx="4" fill="url(#glassGradient)"/>
+                <path d="M45 477h124M107 415v105" stroke="#e7f5f2" stroke-width="4" opacity="0.76"/>
+                <rect x="200" y="470" width="67" height="159" rx="6" fill="#82583a"/>
+                <rect x="210" y="479" width="47" height="99" rx="3" fill="#bce0e2"/>
+                <circle cx="248" cy="545" r="4" fill="#f5d37a"/>
+                <rect x="185" y="612" width="96" height="12" rx="4" fill="#b67c48"/>
+                <rect x="33" y="559" width="148" height="12" rx="5" fill="#bb7c48"/>
+                <rect x="44" y="574" width="126" height="9" rx="4" fill="#c9935f" opacity="0.8"/>
+              </g>
+
+              <!-- Shop 02: 青禾书店 -->
+              <g transform="translate(410 0)" aria-label="青禾书店">
+                <rect x="0" y="304" width="290" height="336" rx="8" fill="#b7d7c5"/>
+                <rect x="0" y="304" width="290" height="18" fill="#2b746b"/>
+                <rect x="18" y="223" width="254" height="100" rx="13" fill="#174e4d" filter="url(#smallShadow)"/>
+                <rect x="28" y="233" width="234" height="80" rx="8" fill="#eff8e9"/>
+                <path d="M44 285c13-29 27-28 39 0M63 270c14-22 28-22 42 0" fill="none" stroke="#2a8171" stroke-width="5" stroke-linecap="round"/>
+                <text x="175" y="283" text-anchor="middle" fill="#205a50" font-size="30" class="shop-sign-text">青禾书店</text>
+                <path d="M18 337h254l-16 34-25-15-24 15-25-15-25 15-25-15-24 15-25-15-25 15Z" fill="url(#tealAwning)"/>
+                <rect x="34" y="396" width="107" height="183" rx="6" fill="#8ebaaa"/>
+                <rect x="42" y="405" width="91" height="162" rx="3" fill="url(#glassGradient)"/>
+                <path d="M57 443h61M57 472h48M57 501h65M57 530h43" stroke="#eaf8f2" stroke-width="5" stroke-linecap="round" opacity="0.72"/>
+                <rect x="158" y="396" width="98" height="183" rx="6" fill="#8ebaaa"/>
+                <rect x="166" y="405" width="82" height="162" rx="3" fill="url(#glassGradient)"/>
+                <path d="M181 440h52M181 468h38M181 496h55M181 524h43" stroke="#eaf8f2" stroke-width="5" stroke-linecap="round" opacity="0.72"/>
+                <rect x="49" y="574" width="52" height="10" rx="4" fill="#f2d48d"/>
+                <rect x="178" y="574" width="58" height="10" rx="4" fill="#f2d48d"/>
+                <circle cx="253" cy="620" r="11" fill="#f4ca75"/>
+              </g>
+
+              <!-- Shop 03: 巧手修表 -->
+              <g transform="translate(720 0)" aria-label="巧手修表店">
+                <rect x="0" y="333" width="280" height="307" rx="8" fill="#e9d9c2"/>
+                <rect x="18" y="246" width="244" height="91" rx="12" fill="#faf0db" filter="url(#smallShadow)"/>
+                <rect x="27" y="255" width="226" height="73" rx="7" fill="#16344a"/>
+                <circle cx="66" cy="291" r="21" fill="#f5d16e"/>
+                <circle cx="66" cy="291" r="14" fill="#fff8dc"/>
+                <path d="M66 291v-9M66 291l7 5" stroke="#17344a" stroke-width="3" stroke-linecap="round"/>
+                <text x="174" y="301" text-anchor="middle" fill="#fff5dd" font-size="29" class="shop-sign-text">巧手修表</text>
+                <rect x="29" y="364" width="222" height="123" rx="7" fill="#55727c"/>
+                <rect x="40" y="375" width="200" height="99" rx="3" fill="url(#glassGradient)"/>
+                <path d="M60 418h63M60 442h42M164 414c15-9 31-9 46 0M164 438c15-9 31-9 46 0" stroke="#e7f4f4" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
+                <rect x="28" y="511" width="223" height="8" rx="4" fill="#a8805d"/>
+                <rect x="103" y="535" width="74" height="94" rx="5" fill="#8c644b"/>
+                <rect x="112" y="545" width="56" height="56" rx="3" fill="#b8dde1"/>
+                <circle cx="169" cy="612" r="3.5" fill="#f6cf72"/>
+                <rect x="32" y="584" width="52" height="9" rx="4" fill="#b68c67"/>
+                <rect x="193" y="584" width="51" height="9" rx="4" fill="#b68c67"/>
+              </g>
+
+              <!-- Shop 04: 花间花店 -->
+              <g transform="translate(1030 0)" aria-label="花间花店">
+                <rect x="0" y="315" width="300" height="325" rx="8" fill="#efc4c0"/>
+                <rect x="12" y="315" width="276" height="18" rx="4" fill="#c77d82"/>
+                <rect x="18" y="232" width="264" height="96" rx="15" fill="#653c50" filter="url(#smallShadow)"/>
+                <rect x="29" y="242" width="242" height="75" rx="9" fill="#fff0e9"/>
+                <path d="M53 291c-13-19 9-38 20-23 0-23 31-20 26 2 18-10 29 16 9 26Z" fill="#e67c91"/>
+                <text x="185" y="290" text-anchor="middle" fill="#6c3d51" font-size="30" class="shop-sign-text">花间花店</text>
+                <path d="M20 346h260l-13 35-25-16-24 16-25-16-24 16-25-16-24 16-25-16-24 16-25-16-25 16Z" fill="url(#roseAwning)"/>
+                <rect x="31" y="401" width="149" height="129" rx="7" fill="#9d6f75"/>
+                <rect x="40" y="410" width="131" height="108" rx="4" fill="url(#glassGradient)"/>
+                <g>
+                  <circle cx="66" cy="467" r="14" fill="#ffd45d"/>
+                  <circle cx="98" cy="456" r="13" fill="#f198ac"/>
+                  <circle cx="132" cy="471" r="15" fill="#fff1d8"/>
+                  <circle cx="111" cy="489" r="12" fill="#dc755d"/>
+                  <path d="M66 480v35M98 468v47M132 485v30M111 500v21" stroke="#3f8b5e" stroke-width="6" stroke-linecap="round"/>
+                </g>
+                <rect x="205" y="467" width="68" height="162" rx="6" fill="#936970"/>
+                <rect x="215" y="477" width="48" height="94" rx="3" fill="#c8e6e4"/>
+                <circle cx="254" cy="540" r="4" fill="#f4cf72"/>
+                <rect x="30" y="552" width="151" height="15" rx="5" fill="#8e5c66"/>
+                <rect x="39" y="574" width="35" height="45" rx="4" fill="#e2b68b"/>
+                <rect x="85" y="574" width="35" height="45" rx="4" fill="#e2b68b"/>
+                <rect x="131" y="574" width="35" height="45" rx="4" fill="#e2b68b"/>
+                <path d="M51 593c-10-12 6-22 11-11 1-12 17-8 12 3 10 0 9 12-3 12Z" fill="#f4c85c"/>
+                <path d="M98 593c-10-12 6-22 11-11 1-12 17-8 12 3 10 0 9 12-3 12Z" fill="#ee8ca0"/>
+              </g>
+
+              <!-- Shop 05: 鲜果铺 -->
+              <g transform="translate(1340 0)" aria-label="鲜果铺">
+                <rect x="0" y="326" width="290" height="314" rx="8" fill="#d8d69c"/>
+                <rect x="15" y="248" width="260" height="88" rx="13" fill="#285d49" filter="url(#smallShadow)"/>
+                <rect x="25" y="257" width="240" height="70" rx="8" fill="#f8ecc1"/>
+                <circle cx="61" cy="292" r="19" fill="#e45e45"/>
+                <path d="M61 275c3-8 10-9 15-7-2 7-8 9-15 7Z" fill="#4d8c4e"/>
+                <text x="174" y="301" text-anchor="middle" fill="#315d48" font-size="31" class="shop-sign-text">鲜果铺</text>
+                <rect x="22" y="351" width="246" height="128" rx="6" fill="#638b73"/>
+                <rect x="32" y="360" width="226" height="106" rx="3" fill="url(#glassGradient)"/>
+                <g>
+                  <circle cx="66" cy="399" r="13" fill="#ec714a"/>
+                  <circle cx="94" cy="390" r="12" fill="#f3bd45"/>
+                  <circle cx="123" cy="401" r="14" fill="#d65843"/>
+                  <circle cx="157" cy="389" r="13" fill="#93c95f"/>
+                  <circle cx="189" cy="402" r="14" fill="#f1a43e"/>
+                  <circle cx="220" cy="391" r="12" fill="#e66a50"/>
+                  <path d="M54 424h188l-10 28H66Z" fill="#97663d"/>
+                </g>
+                <path d="M22 493h246l-13 31-24-15-24 15-25-15-24 15-24-15-25 15-24-15-24 15-25-15Z" fill="#3d8260"/>
+                <rect x="62" y="548" width="158" height="80" rx="7" fill="#b58a57"/>
+                <path d="M78 568h126M78 589h94M78 610h112" stroke="#e7c68d" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
+                <rect x="48" y="540" width="31" height="12" rx="3" fill="#f0d481"/>
+                <rect x="205" y="540" width="31" height="12" rx="3" fill="#f0d481"/>
+              </g>
+
+              <!-- Shop 06: 云朵咖啡 -->
+              <g transform="translate(1650 0)" aria-label="云朵咖啡店">
+                <rect x="0" y="310" width="300" height="330" rx="8" fill="#d7b697"/>
+                <rect x="18" y="230" width="264" height="96" rx="15" fill="#5b3c2f" filter="url(#smallShadow)"/>
+                <rect x="29" y="240" width="242" height="76" rx="9" fill="#f7e3c8"/>
+                <path d="M49 286c0-17 23-25 34-12 11-16 35-5 29 14h-8c3-10-10-14-15-4-4-8-16-5-16 4-8-6-16 0-16 8Z" fill="#9c7457"/>
+                <text x="186" y="289" text-anchor="middle" fill="#5a3b2e" font-size="30" class="shop-sign-text">云朵咖啡</text>
+                <rect x="25" y="351" width="250" height="128" rx="7" fill="#765540"/>
+                <rect x="36" y="361" width="228" height="105" rx="4" fill="url(#glassGradient)"/>
+                <path d="M182 410c18 0 28 11 28 25s-10 25-28 25h-4v-13h5c10 0 16-4 16-12s-6-12-16-12h-1Z" fill="none" stroke="#f4e3c4" stroke-width="6"/>
+                <path d="M158 395v66h21l7-12h-14v-54Z" fill="#f4e3c4" opacity="0.82"/>
+                <path d="M65 420h56M65 443h44" stroke="#eff7ee" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+                <rect x="30" y="500" width="238" height="9" rx="4" fill="#8f6447"/>
+                <rect x="112" y="527" width="86" height="104" rx="5" fill="#79543f"/>
+                <rect x="122" y="537" width="66" height="63" rx="3" fill="#b9dce0"/>
+                <circle cx="178" cy="614" r="4" fill="#f3cc7d"/>
+                <rect x="36" y="599" width="54" height="11" rx="4" fill="#9d6e4b"/>
+                <rect x="214" y="599" width="54" height="11" rx="4" fill="#9d6e4b"/>
+              </g>
+
+              <!-- Shop 07: 好邻居便利店 -->
+              <g transform="translate(1960 0)" aria-label="好邻居便利店">
+                <rect x="0" y="318" width="290" height="322" rx="8" fill="#e9d9a6"/>
+                <rect x="14" y="238" width="262" height="92" rx="13" fill="#20508a" filter="url(#smallShadow)"/>
+                <rect x="24" y="247" width="242" height="73" rx="8" fill="#fff0b8"/>
+                <circle cx="57" cy="283" r="19" fill="#f47d46"/>
+                <path d="M48 291v-16h18v16M52 275v-6h10v6" fill="none" stroke="#fff6d6" stroke-width="4" stroke-linecap="round"/>
+                <text x="171" y="292" text-anchor="middle" fill="#245084" font-size="25" class="shop-sign-text">好邻居便利店</text>
+                <rect x="24" y="350" width="242" height="118" rx="7" fill="#3b6d92"/>
+                <rect x="34" y="360" width="222" height="98" rx="3" fill="url(#glassGradient)"/>
+                <g fill="#f5e8b4" opacity="0.8">
+                  <rect x="50" y="384" width="30" height="9" rx="3"/>
+                  <rect x="50" y="400" width="43" height="9" rx="3"/>
+                  <rect x="50" y="416" width="34" height="9" rx="3"/>
+                  <rect x="154" y="384" width="34" height="9" rx="3"/>
+                  <rect x="154" y="400" width="51" height="9" rx="3"/>
+                  <rect x="154" y="416" width="40" height="9" rx="3"/>
+                </g>
+                <rect x="110" y="473" width="75" height="159" rx="6" fill="#3b6d92"/>
+                <rect x="120" y="483" width="55" height="103" rx="3" fill="#b4dfe5"/>
+                <circle cx="165" cy="552" r="4" fill="#f9d477"/>
+                <rect x="28" y="576" width="63" height="45" rx="6" fill="#f7f1d9"/>
+                <rect x="191" y="576" width="62" height="45" rx="6" fill="#f7f1d9"/>
+                <path d="M42 595h31M42 607h22M205 595h31M205 607h22" stroke="#829a8b" stroke-width="4" stroke-linecap="round"/>
+                <path d="M21 332h248" stroke="#fff2c6" stroke-width="8" stroke-linecap="round"/>
+              </g>
+
+              <!-- Shop 08: 灯笼面馆 -->
+              <g transform="translate(2270 0)" aria-label="灯笼面馆">
+                <rect x="0" y="307" width="290" height="333" rx="8" fill="#d7a17e"/>
+                <rect x="15" y="225" width="260" height="99" rx="14" fill="#762e2d" filter="url(#smallShadow)"/>
+                <rect x="25" y="235" width="240" height="78" rx="8" fill="#f8ddad"/>
+                <text x="145" y="285" text-anchor="middle" fill="#8b302d" font-size="31" class="shop-sign-text">灯笼面馆</text>
+                <path d="M21 345h248l-14 36-24-16-24 16-25-16-24 16-25-16-24 16-25-16-25 16-24-16-24 16Z" fill="#a6382f"/>
+                <g filter="url(#smallShadow)">
+                  <ellipse cx="49" cy="416" rx="24" ry="33" fill="#ef6543"/>
+                  <ellipse cx="49" cy="416" rx="14" ry="31" fill="none" stroke="#ffc26c" stroke-width="4"/>
+                  <path d="M49 383v-15M49 449v12" stroke="#59241e" stroke-width="5" stroke-linecap="round"/>
+                  <ellipse cx="241" cy="416" rx="24" ry="33" fill="#ef6543"/>
+                  <ellipse cx="241" cy="416" rx="14" ry="31" fill="none" stroke="#ffc26c" stroke-width="4"/>
+                  <path d="M241 383v-15M241 449v12" stroke="#59241e" stroke-width="5" stroke-linecap="round"/>
+                </g>
+                <rect x="83" y="374" width="124" height="125" rx="7" fill="#82413b"/>
+                <rect x="92" y="383" width="106" height="103" rx="3" fill="url(#glassGradient)"/>
+                <path d="M111 434h67M111 454h49" stroke="#ffe2b0" stroke-width="5" stroke-linecap="round" opacity="0.82"/>
+                <rect x="31" y="506" width="228" height="12" rx="5" fill="#8b4b3c"/>
+                <rect x="109" y="530" width="77" height="101" rx="5" fill="#703d36"/>
+                <rect x="119" y="540" width="57" height="62" rx="3" fill="#b7d8db"/>
+                <circle cx="166" cy="611" r="4" fill="#ffd074"/>
+                <rect x="39" y="587" width="49" height="10" rx="4" fill="#a6654d"/>
+                <rect x="204" y="587" width="49" height="10" rx="4" fill="#a6654d"/>
+              </g>
+
+              <!-- Shop 09: 惠民药房 -->
+              <g transform="translate(2580 0)" aria-label="惠民药房">
+                <rect x="0" y="315" width="290" height="325" rx="8" fill="#b8d7cf"/>
+                <rect x="14" y="236" width="262" height="92" rx="13" fill="#14685f" filter="url(#smallShadow)"/>
+                <rect x="24" y="245" width="242" height="73" rx="8" fill="#effaf1"/>
+                <rect x="40" y="261" width="42" height="42" rx="9" fill="#2b9a6b"/>
+                <path d="M61 267v30M46 282h30" stroke="#f9fff8" stroke-width="10" stroke-linecap="round"/>
+                <text x="183" y="290" text-anchor="middle" fill="#176b5d" font-size="30" class="shop-sign-text">惠民药房</text>
+                <rect x="25" y="350" width="240" height="124" rx="7" fill="#4b8c85"/>
+                <rect x="35" y="360" width="220" height="104" rx="3" fill="url(#glassGradient)"/>
+                <g opacity="0.88">
+                  <rect x="53" y="383" width="52" height="12" rx="4" fill="#eaf8ea"/>
+                  <rect x="73" y="363" width="12" height="52" rx="4" fill="#eaf8ea"/>
+                  <rect x="150" y="399" width="68" height="10" rx="4" fill="#eaf8ea"/>
+                  <rect x="150" y="422" width="46" height="10" rx="4" fill="#eaf8ea"/>
+                </g>
+                <rect x="31" y="500" width="228" height="10" rx="4" fill="#5c8c7d"/>
+                <rect x="109" y="528" width="77" height="103" rx="5" fill="#4f8478"/>
+                <rect x="119" y="538" width="57" height="64" rx="3" fill="#c5e5e6"/>
+                <circle cx="166" cy="610" r="4" fill="#f4d174"/>
+                <rect x="38" y="577" width="52" height="14" rx="5" fill="#f5f0dc"/>
+                <rect x="205" y="577" width="52" height="14" rx="5" fill="#f5f0dc"/>
+              </g>
+
+              <!-- Final destination: 松风雅苑 3栋 -->
+              <g transform="translate(2910 0)" aria-label="松风雅苑三栋居民楼">
+                <rect x="0" y="126" width="520" height="514" rx="12" fill="url(#apartmentGradient)"/>
+                <path d="M-18 139 260 65l278 74Z" fill="#a86255"/>
+                <rect x="25" y="142" width="470" height="20" rx="5" fill="#c88168"/>
+                <rect x="204" y="102" width="112" height="66" rx="10" fill="#fff2dc" filter="url(#smallShadow)"/>
+                <text x="260" y="142" text-anchor="middle" fill="#9f493f" font-size="27" font-weight="900" letter-spacing="0.12em">松风雅苑</text>
+                <rect x="360" y="174" width="95" height="58" rx="10" fill="#15554e"/>
+                <text x="407" y="212" text-anchor="middle" fill="#fff4cf" font-size="30" font-weight="900">3栋</text>
+
+                <!-- upper windows -->
+                <g fill="#6d9faa" stroke="#fff0dc" stroke-width="6">
+                  <rect x="45" y="212" width="79" height="74" rx="7"/>
+                  <rect x="174" y="212" width="79" height="74" rx="7"/>
+                  <rect x="303" y="212" width="79" height="74" rx="7"/>
+                  <rect x="45" y="326" width="79" height="74" rx="7"/>
+                  <rect x="174" y="326" width="79" height="74" rx="7"/>
+                  <rect x="303" y="326" width="79" height="74" rx="7"/>
+                </g>
+                <g class="window-pane" fill="#8fc3cb">
+                  <rect x="54" y="221" width="61" height="56" rx="3" class="lit-window"/>
+                  <rect x="183" y="221" width="61" height="56" rx="3" class="lit-window"/>
+                  <rect x="312" y="221" width="61" height="56" rx="3"/>
+                  <rect x="54" y="335" width="61" height="56" rx="3"/>
+                  <rect x="183" y="335" width="61" height="56" rx="3" class="lit-window"/>
+                  <rect x="312" y="335" width="61" height="56" rx="3"/>
+                </g>
+                <g stroke="#f7e8d2" stroke-width="4" opacity="0.9">
+                  <path d="M84 221v56M54 249h61M213 221v56M183 249h61M342 221v56M312 249h61"/>
+                  <path d="M84 335v56M54 363h61M213 335v56M183 363h61M342 335v56M312 363h61"/>
+                </g>
+
+                <!-- balconies -->
+                <g fill="#f6e2c8" stroke="#b77161" stroke-width="5">
+                  <rect x="154" y="286" width="119" height="19" rx="5"/>
+                  <rect x="283" y="286" width="119" height="19" rx="5"/>
+                  <rect x="154" y="400" width="119" height="19" rx="5"/>
+                  <rect x="283" y="400" width="119" height="19" rx="5"/>
+                </g>
+                <g stroke="#b77161" stroke-width="4">
+                  <path d="M165 305v32M185 305v32M205 305v32M225 305v32M245 305v32"/>
+                  <path d="M294 305v32M314 305v32M334 305v32M354 305v32M374 305v32"/>
+                  <path d="M165 419v32M185 419v32M205 419v32M225 419v32M245 419v32"/>
+                  <path d="M294 419v32M314 419v32M334 419v32M354 419v32M374 419v32"/>
+                </g>
+
+                <!-- entry -->
+                <path d="M151 505h219l-18 53H169Z" fill="#77483e" filter="url(#smallShadow)"/>
+                <path d="M159 505h203" stroke="#f2c986" stroke-width="8" stroke-linecap="round"/>
+                <rect x="202" y="514" width="118" height="126" rx="8" fill="#70453f"/>
+                <rect x="212" y="524" width="98" height="104" rx="4" fill="#b1d7dc"/>
+                <path d="M261 524v104" stroke="#f3dec7" stroke-width="5"/>
+                <circle cx="301" cy="579" r="4" fill="#f7cf72"/>
+                <rect x="185" y="585" width="151" height="55" rx="7" fill="#fff1d4" opacity="0.92"/>
+                <text x="260" y="610" text-anchor="middle" fill="#8d5847" font-size="16" font-weight="700" letter-spacing="0.08em">安心送到家</text>
+                <text x="260" y="630" text-anchor="middle" fill="#8d5847" font-size="13" font-weight="600">外卖请放取餐柜</text>
+                <ellipse class="door-glow" cx="260" cy="633" rx="155" ry="26" fill="#ffd778" opacity="0.32" filter="url(#glowBlur)"/>
+
+                <!-- mailboxes and plants -->
+                <g transform="translate(31 518)">
+                  <rect width="103" height="94" rx="7" fill="#596c6d"/>
+                  <g fill="#e9dcc4">
+                    <rect x="10" y="13" width="83" height="18" rx="3"/>
+                    <rect x="10" y="38" width="83" height="18" rx="3"/>
+                    <rect x="10" y="63" width="83" height="18" rx="3"/>
+                  </g>
+                  <g fill="#9e7e5d">
+                    <circle cx="83" cy="22" r="2.5"/>
+                    <circle cx="83" cy="47" r="2.5"/>
+                    <circle cx="83" cy="72" r="2.5"/>
+                  </g>
+                </g>
+                <g transform="translate(430 528)">
+                  <path d="M14 96V36M14 52c-20-3-30-18-30-34 22-1 33 10 30 34ZM14 68c20-3 30-18 30-34-22-1-33 10-30 34Z" fill="#4e9066"/>
+                  <path d="M14 96V49M14 36c-16-2-23-13-23-25M14 48c16-2 24-12 24-25" fill="none" stroke="#326a4b" stroke-width="4" stroke-linecap="round"/>
+                  <rect x="-9" y="78" width="48" height="31" rx="6" fill="#b4694c"/>
+                </g>
+              </g>
+            </g>
+
+            <!-- Fixed street foreground, producing depth under the moving storefronts -->
+            <rect x="0" y="612" width="1600" height="74" fill="url(#sidewalkTiles)"/>
+            <rect x="0" y="612" width="1600" height="10" fill="#b6a889" opacity="0.82"/>
+            <rect x="0" y="670" width="1600" height="20" fill="#bfae8f"/>
+            <rect x="0" y="687" width="1600" height="14" fill="#d6c8a9"/>
+            <rect x="0" y="700" width="1600" height="200" fill="url(#roadGradient)"/>
+            <path id="laneDashes" d="M-80 817H1680" fill="none" stroke="#f5d995" stroke-width="8" stroke-linecap="round" stroke-dasharray="76 52" opacity="0.72"/>
+            <path d="M0 731H1600" stroke="#a9bbc1" stroke-width="3" opacity="0.32"/>
+
+            <!-- Far moving foreground details in the street -->
+            <g id="streetMotion" opacity="0.9">
+              <g transform="translate(1730 624)">
+                <rect x="-8" y="-82" width="10" height="83" rx="5" fill="#415c62"/>
+                <path d="M-3-80c-35 0-38-43-5-43M-3-122c-50 0-59-67-15-83" fill="none" stroke="#4c7c68" stroke-width="12" stroke-linecap="round"/>
+                <path d="M-3-124c28-19 23-53-7-63M-3-78c-33-13-34-44-2-49" fill="#66a272"/>
+                <rect x="-32" y="-160" width="74" height="20" rx="7" fill="#3a6e56"/>
+              </g>
+            </g>
+
+            <!-- Panda rider and electric scooter -->
+            <ellipse cx="552" cy="817" rx="227" ry="25" fill="#152e40" opacity="0.26"/>
+
+            <g id="motionLines" opacity="0">
+              <g fill="none" stroke="#effcff" stroke-linecap="round">
+                <path d="M124 674h126" stroke-width="7" opacity="0.54"/>
+                <path d="M70 717h104" stroke-width="5" opacity="0.37"/>
+                <path d="M149 759h92" stroke-width="5" opacity="0.46"/>
+                <path d="M109 796h142" stroke-width="7" opacity="0.31"/>
+              </g>
+              <path d="M835 701c29 0 50 9 69 24" fill="none" stroke="#f9f4db" stroke-width="5" stroke-linecap="round" opacity="0.4"/>
+              <path d="M856 745h55" fill="none" stroke="#f9f4db" stroke-width="4" stroke-linecap="round" opacity="0.32"/>
+            </g>
+
+            <g id="rigMove">
+              <!-- scooter shadow and wheels -->
+              <ellipse cx="555" cy="814" rx="190" ry="17" fill="#0f2433" opacity="0.24"/>
+
+              <g id="rearWheel">
+                <circle cx="425" cy="770" r="46" fill="#1c2b34"/>
+                <circle cx="425" cy="770" r="34" fill="#51666c"/>
+                <circle cx="425" cy="770" r="25" fill="#d7e3df"/>
+                <circle cx="425" cy="770" r="9" fill="#315159"/>
+                <g stroke="#8ea5a6" stroke-width="4" stroke-linecap="round">
+                  <path d="M425 750v40M405 770h40M411 756l28 28M439 756l-28 28"/>
+                </g>
+              </g>
+
+              <g id="frontWheel">
+                <circle cx="695" cy="770" r="46" fill="#1c2b34"/>
+                <circle cx="695" cy="770" r="34" fill="#51666c"/>
+                <circle cx="695" cy="770" r="25" fill="#d7e3df"/>
+                <circle cx="695" cy="770" r="9" fill="#315159"/>
+                <g stroke="#8ea5a6" stroke-width="4" stroke-linecap="round">
+                  <path d="M695 750v40M675 770h40M681 756l28 28M709 756l-28 28"/>
+                </g>
+              </g>
+
+              <!-- wheel arches -->
+              <path d="M372 769c0-38 24-60 53-60s53 22 53 60" fill="none" stroke="#0d686b" stroke-width="14" stroke-linecap="round"/>
+              <path d="M642 769c0-38 24-60 53-60s53 22 53 60" fill="none" stroke="#0d686b" stroke-width="14" stroke-linecap="round"/>
+
+              <!-- scooter body -->
+              <path d="M412 700c28-28 88-23 111 14l16 41-14 26-115-2c-19-17-17-58 2-79Z" fill="#0f7478"/>
+              <path d="M479 722h151l-5 28-122 8-46-12Z" fill="#0b5c63"/>
+              <path d="M603 693l45-57 35 18-28 84-64 30Z" fill="#118489"/>
+              <path d="M637 623l31 8-19 92-50-8Z" fill="#0d686d"/>
+              <path d="M609 623c21-16 64-10 72 17" fill="none" stroke="#163b44" stroke-width="12" stroke-linecap="round"/>
+              <path d="M629 618l43 7" fill="none" stroke="#f6c764" stroke-width="8" stroke-linecap="round"/>
+              <path d="M667 617l25 13" fill="none" stroke="#253942" stroke-width="6" stroke-linecap="round"/>
+              <path d="M671 618c-7-6-12-16-11-25" fill="none" stroke="#253942" stroke-width="6" stroke-linecap="round"/>
+              <path d="M659 587c-15-7-24-4-24 7" fill="none" stroke="#c6d9d8" stroke-width="4" stroke-linecap="round"/>
+              <circle cx="634" cy="592" r="8" fill="#f8d36a"/>
+              <path d="M442 731h-30v20h38" fill="#18464d"/>
+              <path d="M427 735c-10 12-12 24-9 36" fill="none" stroke="#172e36" stroke-width="7" stroke-linecap="round"/>
+              <path d="M681 721l24-11M686 737l25 2" stroke="#e7f1ec" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+              <path d="M607 709h62l-5 18h-55Z" fill="#ff884d"/>
+              <path d="M605 737h57v8h-55Z" fill="#1b3940" opacity="0.8"/>
+              <text x="633" y="750" text-anchor="middle" fill="#f9e4bb" font-size="10" font-weight="800">SAFE</text>
+
+              <!-- delivery box -->
+              <g id="deliveryBox" filter="url(#smallShadow)">
+                <rect x="348" y="602" width="124" height="128" rx="15" fill="url(#boxGradient)" stroke="#c8492a" stroke-width="4"/>
+                <rect x="357" y="612" width="106" height="32" rx="9" fill="#ffb56c" opacity="0.8"/>
+                <circle cx="379" cy="628" r="12" fill="#fff4df"/>
+                <circle cx="374" cy="624" r="3.5" fill="#25323a"/>
+                <circle cx="386" cy="624" r="3.5" fill="#25323a"/>
+                <ellipse cx="380" cy="634" rx="5" ry="3.5" fill="#f3b05b"/>
+                <text x="424" y="640" text-anchor="middle" fill="#fff8e9" font-size="17" font-weight="900" letter-spacing="0.08em">熊猫急送</text>
+                <path d="M366 658h88v43h-88Z" fill="#f7e5ca"/>
+                <text x="410" y="686" text-anchor="middle" fill="#dd5f33" font-size="22" font-weight="900">准时达</text>
+                <path d="M357 713h106" stroke="#cf492b" stroke-width="3" opacity="0.7"/>
+                <rect x="368" y="720" width="83" height="8" rx="4" fill="#ef7347"/>
+                <rect x="367" y="700" width="12" height="21" rx="4" fill="#ffcf62"/>
+                <circle cx="450" cy="618" r="3.5" fill="#fff3d5" opacity="0.8"/>
+              </g>
+              <path d="M348 707h-19v17h18" fill="#253c42"/>
+              <circle cx="329" cy="716" r="6" fill="#ff5148"/>
+              <circle cx="329" cy="716" r="18" fill="#ff5148" opacity="0.12"/>
+
+              <!-- rider legs -->
+              <path d="M510 671c5 31 17 49 44 56l28-15-17-25-14 7-28-32Z" fill="#22262d"/>
+              <path d="M552 694c28 10 54 11 79 3" fill="none" stroke="#22262d" stroke-width="29" stroke-linecap="round"/>
+              <path d="M621 694l42 4c11 1 17 9 14 19-3 9-11 13-22 11l-39-8Z" fill="#fff8ee"/>
+              <path d="M625 708h43" stroke="#d9c7b3" stroke-width="3" stroke-linecap="round"/>
+
+              <!-- rider torso and high-visibility vest -->
+              <path d="M483 565c-7 47 4 92 35 118 31 20 81 15 104-13 18-23 15-72-2-105Z" fill="#25282f"/>
+              <ellipse cx="545" cy="623" rx="58" ry="51" fill="#f9f1df"/>
+              <path d="M486 565c8-16 31-24 57-23 34 1 59 15 63 38l-15 53-27-4-11-42-44 6-1 44-29 2Z" fill="#d1e34f" stroke="#a7bd31" stroke-width="4" stroke-linejoin="round"/>
+              <path d="M489 599l100 13M492 619l94 10" stroke="#eef5df" stroke-width="7" opacity="0.95"/>
+              <path d="M520 544l9 34M576 542l-6 36" stroke="#b9ce36" stroke-width="3" opacity="0.9"/>
+              <circle cx="531" cy="592" r="15" fill="#fff7e8"/>
+              <text x="531" y="598" text-anchor="middle" fill="#e85f34" font-size="17" font-weight="900">送</text>
+
+              <!-- rider arm, reflective cuff, paw -->
+              <path d="M580 577c22-7 48 3 67 22l27 32" fill="none" stroke="#25282f" stroke-width="29" stroke-linecap="round"/>
+              <path d="M652 610l14 18" stroke="#d1e34f" stroke-width="13" stroke-linecap="round"/>
+              <circle cx="675" cy="618" r="17" fill="#fff8ed"/>
+              <path d="M668 612c7-5 16-2 17 4" fill="none" stroke="#d9c9b6" stroke-width="3" stroke-linecap="round"/>
+              <path d="M686 608l-5 18" stroke="#22262d" stroke-width="7" stroke-linecap="round"/>
+
+              <!-- head, ears, helmet, fastened strap -->
+              <circle cx="489" cy="472" r="27" fill="#25282f"/>
+              <circle cx="605" cy="471" r="27" fill="#25282f"/>
+              <ellipse cx="547" cy="508" rx="72" ry="65" fill="#fffaf0" stroke="#e7dcca" stroke-width="3"/>
+              <path d="M480 496c-12 14-20 30-17 43" fill="none" stroke="#22262d" stroke-width="3" opacity="0.36"/>
+              <ellipse cx="517" cy="505" rx="20" ry="27" transform="rotate(24 517 505)" fill="#272a31"/>
+              <ellipse cx="577" cy="505" rx="20" ry="27" transform="rotate(-24 577 505)" fill="#272a31"/>
+              <circle cx="520" cy="501" r="8" fill="#f8f6e9"/>
+              <circle cx="573" cy="501" r="8" fill="#f8f6e9"/>
+              <circle cx="522" cy="503" r="4" fill="#1b2226"/>
+              <circle cx="571" cy="503" r="4" fill="#1b2226"/>
+              <ellipse cx="547" cy="535" rx="24" ry="17" fill="#f2dfc5"/>
+              <path d="M537 530c7-7 15-6 20 0-2 8-6 11-11 10-5 1-9-2-9-10Z" fill="#2d2b2d"/>
+              <path d="M547 540c0 8-9 11-16 10M547 540c1 8 10 11 17 9" fill="none" stroke="#7d6253" stroke-width="3" stroke-linecap="round"/>
+              <path d="M484 500c-14 13-22 28-18 43" fill="none" stroke="#e8c346" stroke-width="5" stroke-linecap="round" opacity="0.75"/>
+
+              <path d="M472 482c5-47 39-70 76-70 39 0 68 24 74 67-25-9-45-5-61 9-19-14-47-15-89-6Z" fill="url(#helmetGradient)" stroke="#d75129" stroke-width="4"/>
+              <path d="M490 441c21-20 57-29 86-15" fill="none" stroke="#ffd278" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+              <path d="M472 476c25-14 97-18 151 2l-4 19c-50-17-112-16-146-2Z" fill="#f9e8d0" stroke="#d85c32" stroke-width="3"/>
+              <path d="M607 489c22-4 36 3 36 14 0 15-19 23-41 20" fill="#9dd6df" opacity="0.76"/>
+              <path d="M610 492c14-1 24 4 24 11 0 7-9 12-24 12" fill="#eef9f4" opacity="0.36"/>
+              <path d="M608 512c9 9 8 21 0 27" fill="none" stroke="#58727a" stroke-width="3" stroke-linecap="round"/>
+              <path d="M608 537c-7 20-26 31-47 26-16-3-26-15-27-28" fill="none" stroke="#25333a" stroke-width="4" stroke-linecap="round"/>
+              <rect x="548" y="534" width="16" height="13" rx="4" fill="#47575b" transform="rotate(17 556 540)"/>
+              <path d="M552 538h9" stroke="#dfe8e4" stroke-width="2" stroke-linecap="round"/>
+
+              <!-- front protection and lights -->
+              <path d="M707 682c13-2 20 7 18 19l-6 26-17-2Z" fill="#ffd56e" stroke="#bf8431" stroke-width="2"/>
+              <ellipse id="headlightGlow" cx="731" cy="704" rx="64" ry="37" fill="url(#headlightGlow)" opacity="0.72" filter="url(#glowBlur)"/>
+              <path d="M722 688l103 24-106 10Z" fill="#fff0a5" opacity="0.2"/>
+              <path d="M707 671l33 6" stroke="#e7f2ed" stroke-width="5" stroke-linecap="round"/>
+            </g>
+
+            <!-- Small motion puffs stay outside the rider for depth -->
+            <g id="dustPuffs" fill="#e7dcc6">
+              <circle cx="342" cy="789" r="10" opacity="0"/>
+              <circle cx="316" cy="781" r="7" opacity="0"/>
+              <circle cx="291" cy="793" r="5" opacity="0"/>
+            </g>
+
+            <!-- HUD: brand, safety equipment, progress -->
+            <g id="brandHud">
+              <rect x="40" y="34" width="388" height="84" rx="25" fill="#102b40" opacity="0.9" filter="url(#smallShadow)"/>
+              <circle cx="84" cy="76" r="25" fill="#ff8652"/>
+              <circle cx="75" cy="72" r="8" fill="#fff9e9"/>
+              <circle cx="94" cy="72" r="8" fill="#fff9e9"/>
+              <ellipse cx="76" cy="70" rx="3.2" ry="4.5" fill="#26323b"/>
+              <ellipse cx="94" cy="70" rx="3.2" ry="4.5" fill="#26323b"/>
+              <ellipse cx="85" cy="80" rx="5" ry="3.5" fill="#f1b16b"/>
+              <text x="124" y="70" fill="#ffffff" font-size="24" font-weight="900" letter-spacing="0.08em">熊猫急送</text>
+              <text x="125" y="97" fill="#bdd7dc" font-size="13" font-weight="600" letter-spacing="0.06em">准时专送 · 这一路只送一单</text>
+            </g>
+
+            <g id="safetyChip">
+              <rect x="40" y="129" width="430" height="40" rx="20" fill="#fff8e9" opacity="0.94" filter="url(#smallShadow)"/>
+              <circle cx="63" cy="149" r="10" fill="#1c9a71"/>
+              <path d="M58 149l4 4 7-9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <text x="82" y="155" fill="#294b5b" font-size="14" font-weight="800" letter-spacing="0.05em">头盔扣紧</text>
+              <circle cx="166" cy="149" r="3" fill="#b58a62"/>
+              <text x="180" y="155" fill="#294b5b" font-size="14" font-weight="800" letter-spacing="0.05em">反光背心</text>
+              <circle cx="264" cy="149" r="3" fill="#b58a62"/>
+              <text x="278" y="155" fill="#294b5b" font-size="14" font-weight="800" letter-spacing="0.05em">前后灯亮起</text>
+            </g>
+
+            <g id="progressHud">
+              <rect x="1170" y="34" width="390" height="84" rx="25" fill="#102b40" opacity="0.9" filter="url(#smallShadow)"/>
+              <text x="1200" y="64" fill="#ffffff" font-size="15" font-weight="800" letter-spacing="0.08em">配送进度</text>
+              <text id="progressText" x="1530" y="64" text-anchor="end" fill="#ffd16c" font-size="16" font-weight="900">0%</text>
+              <rect x="1200" y="78" width="330" height="10" rx="5" fill="#2c4a5c"/>
+              <rect id="progressFill" x="1200" y="78" width="0" height="10" rx="5" fill="#ff8652"/>
+              <text x="1200" y="106" fill="#bdd7dc" font-size="12" font-weight="600" letter-spacing="0.04em">沿街直行 · 不重复绕路</text>
+            </g>
+
+            <!-- Completion message -->
+            <g id="arrival" aria-hidden="true">
+              <g transform="translate(590 176)">
+                <g class="arrival-card" filter="url(#softShadow)">
+                  <rect x="0" y="0" width="590" height="126" rx="31" fill="#fffaf0"/>
+                  <rect x="8" y="8" width="574" height="110" rx="24" fill="none" stroke="#f3d8b6" stroke-width="2"/>
+                  <circle cx="70" cy="63" r="34" fill="#1ca374"/>
+                  <path d="M53 64l11 11 23-28" fill="none" stroke="#fffaf0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <text x="124" y="59" fill="#18374d" font-size="42" font-weight="900" letter-spacing="0.03em">外卖已送达！</text>
+                  <text x="125" y="92" fill="#637681" font-size="17" font-weight="700" letter-spacing="0.05em">松风雅苑 · 3栋，请开门取餐</text>
+                </g>
+                <g class="arrival-confetti">
+                  <rect x="-36" y="24" width="12" height="25" rx="4" fill="#ff8751" transform="rotate(-18 -30 36)"/>
+                  <circle cx="611" cy="30" r="8" fill="#ffd05f"/>
+                  <rect x="630" y="68" width="11" height="22" rx="4" fill="#58b7a1" transform="rotate(28 635 79)"/>
+                  <circle cx="-18" cy="101" r="7" fill="#73c7d7"/>
+                  <path d="M584 108l13 5-10 13Z" fill="#f37b95"/>
+                  <circle cx="39" cy="-15" r="5" fill="#ffd05f"/>
+                  <path d="M532-20l7 14-15 2Z" fill="#69b66d"/>
+                  <circle cx="672" cy="15" r="5" fill="#f37b95"/>
+                </g>
+              </g>
+            </g>
+
+            <!-- Very light cinematic vignette -->
+            <rect width="1600" height="900" fill="none" stroke="#0b2232" stroke-width="32" opacity="0.08"/>
+          </g>
+        </svg>
+
+        <div class="controls" aria-live="polite">
+          <div class="status-pill">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="statusLabel">正在配送…</span>
+          </div>
+          <button class="replay-button" id="replayButton" type="button" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 11a8 8 0 1 0-2.34 5.66" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M20 4.5V11h-6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            重播动画
+          </button>
+        </div>
+      </div>
+
+      <div class="caption">
+        <span><strong id="pageTitle">熊猫急送：一次完整、不重复的送达旅程</strong></span>
+        <span>动画播放一次后自动停止 · 重播仅由按钮触发</span>
+      </div>
+      <p class="sr-only" id="liveStatus" aria-live="polite">正在配送。</p>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const scene = document.getElementById("scene");
+      const stage = document.getElementById("stage");
+      const world = document.getElementById("world");
+      const farCity = document.getElementById("farCity");
+      const clouds = document.getElementById("clouds");
+      const rearWheel = document.getElementById("rearWheel");
+      const frontWheel = document.getElementById("frontWheel");
+      const rigMove = document.getElementById("rigMove");
+      const motionLines = document.getElementById("motionLines");
+      const laneDashes = document.getElementById("laneDashes");
+      const headlightGlow = document.getElementById("headlightGlow");
+      const dustPuffs = Array.from(document.getElementById("dustPuffs").children);
+      const progressFill = document.getElementById("progressFill");
+      const progressText = document.getElementById("progressText");
+      const statusLabel = document.getElementById("statusLabel");
+      const liveStatus = document.getElementById("liveStatus");
+      const replayButton = document.getElementById("replayButton");
+
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const travelDuration = prefersReducedMotion.matches ? 2200 : 14000;
+      const cameraDistance = 2440;
+      const wheelRadius = 46;
+
+      let animationFrame = 0;
+      let animationStart = null;
+      let animationComplete = false;
+
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+      const smoothstep = (value) => value * value * (3 - 2 * value);
+
+      function setStaticProgress(percent) {
+        const safePercent = clamp(percent, 0, 100);
+        progressFill.setAttribute("width", String(3.3 * safePercent));
+        progressText.textContent = `${Math.round(safePercent)}%`;
+      }
+
+      function resetScene() {
+        animationComplete = false;
+        scene.classList.remove("is-complete");
+        stage.dataset.state = "playing";
+        replayButton.disabled = true;
+        statusLabel.textContent = "正在配送…";
+        liveStatus.textContent = "正在配送。";
+        setStaticProgress(0);
+
+        world.setAttribute("transform", "translate(0 0)");
+        farCity.setAttribute("transform", "translate(0 0)");
+        clouds.setAttribute("transform", "translate(0 0)");
+        rearWheel.setAttribute("transform", "rotate(0 425 770)");
+        frontWheel.setAttribute("transform", "rotate(0 695 770)");
+        rigMove.setAttribute("transform", "translate(0 0) rotate(-0.7 560 755)");
+        motionLines.setAttribute("opacity", "0");
+        laneDashes.setAttribute("stroke-dashoffset", "0");
+        headlightGlow.setAttribute("opacity", "0.72");
+        dustPuffs.forEach((puff) => puff.setAttribute("opacity", "0"));
+      }
+
+      function finishAnimation() {
+        if (animationComplete) {
+          return;
+        }
+
+        animationComplete = true;
+        animationFrame = 0;
+        world.setAttribute("transform", `translate(${-cameraDistance} 0)`);
+        farCity.setAttribute("transform", `translate(${-cameraDistance * 0.115} 0)`);
+        clouds.setAttribute("transform", `translate(${-cameraDistance * 0.045} 0)`);
+        rearWheel.setAttribute("transform", "rotate(248 425 770)");
+        frontWheel.setAttribute("transform", "rotate(248 695 770)");
+        rigMove.setAttribute("transform", "translate(0 0) rotate(-0.7 560 755)");
+        motionLines.setAttribute("opacity", "0");
+        laneDashes.setAttribute("stroke-dashoffset", "-760");
+        headlightGlow.setAttribute("opacity", "0.72");
+        dustPuffs.forEach((puff) => puff.setAttribute("opacity", "0"));
+        setStaticProgress(100);
+        statusLabel.textContent = "配送完成";
+        liveStatus.textContent = "外卖已送达。松风雅苑三栋，请开门取餐。";
+        stage.dataset.state = "complete";
+        scene.classList.add("is-complete");
+        replayButton.disabled = false;
+      }
+
+      function animate(timestamp) {
+        if (animationStart === null) {
+          animationStart = timestamp;
+        }
+
+        const elapsed = timestamp - animationStart;
+        const rawProgress = clamp(elapsed / travelDuration, 0, 1);
+        const easedProgress = smoothstep(rawProgress);
+        const distance = cameraDistance * easedProgress;
+        const speed = Math.sin(Math.PI * rawProgress);
+
+        world.setAttribute("transform", `translate(${-distance} 0)`);
+        farCity.setAttribute("transform", `translate(${-distance * 0.115} 0)`);
+        clouds.setAttribute("transform", `translate(${-distance * 0.045} 0)`);
+        laneDashes.setAttribute("stroke-dashoffset", String(-distance * 0.4));
+
+        const wheelDegrees = (distance / wheelRadius) * (180 / Math.PI);
+        rearWheel.setAttribute("transform", `rotate(${wheelDegrees} 425 770)`);
+        frontWheel.setAttribute("transform", `rotate(${wheelDegrees} 695 770)`);
+
+        const bob = Math.sin(elapsed / 92) * 3.4 * speed;
+        const lean = -0.7 + Math.sin(elapsed / 180) * 0.55 * speed;
+        rigMove.setAttribute("transform", `translate(0 ${bob}) rotate(${lean} 560 755)`);
+        motionLines.setAttribute("opacity", String(0.92 * speed));
+        headlightGlow.setAttribute("opacity", String(0.64 + 0.13 * Math.sin(elapsed / 130)));
+
+        dustPuffs.forEach((puff, index) => {
+          const opacity = clamp(speed * (0.38 - index * 0.09), 0, 0.38);
+          puff.setAttribute("opacity", String(opacity));
+        });
+
+        setStaticProgress(rawProgress * 100);
+
+        if (rawProgress >= 1) {
+          finishAnimation();
+          return;
+        }
+
+        animationFrame = window.requestAnimationFrame(animate);
+      }
+
+      function playOnce() {
+        if (animationFrame) {
+          window.cancelAnimationFrame(animationFrame);
+        }
+
+        resetScene();
+        animationStart = null;
+        animationFrame = window.requestAnimationFrame(animate);
+      }
+
+      replayButton.addEventListener("click", playOnce);
+
+      playOnce();
+    })();
+  </script>
+</body>
+</html>
