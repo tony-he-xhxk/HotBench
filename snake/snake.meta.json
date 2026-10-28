@@ -11,6 +11,8 @@
     "step-5-preview.workbuddy",
     "DeepSeek-V4.1-Flash-1017.codex",
     "DeepSeek-V4.1-Flash-1017.workbuddy",
+    "DeepSeek-V4.1-Flash-1017.trae-cn",
+    "DeepSeek-V4.1-Flash-1017.deepseek-harness",
     "MiniMax-M3.1-Flash.workbuddy"
   ],
   "lights": {
@@ -22,6 +24,8 @@
     "mimo-v2.6-pro.workbuddy.1": "yellow",
     "DeepSeek-V4.1-Flash-1017.codex.1": "green",
     "MiniMax-M3.1-Flash.workbuddy.1": "green",
-    "DeepSeek-V4.1-Flash-1017.workbuddy.1": "green"
+    "DeepSeek-V4.1-Flash-1017.workbuddy.1": "green",
+    "DeepSeek-V4.1-Flash-1017.trae-cn.1": "green",
+    "DeepSeek-V4.1-Flash-1017.deepseek-harness.1": "green"
   }
 }

@@ -24,6 +24,8 @@ window.HOTBENCH_DATA = {
     "harnesses": {
       "codex": "Codex",
       "workbuddy": "WorkBuddy",
+      "deepseek-harness": "DeepSeek Harness",
+      "trae-cn": "TRAE",
       "claude": "Claude",
       "claude-code": "Claude Code",
       "cursor": "Cursor",
@@ -52,6 +54,8 @@ window.HOTBENCH_DATA = {
         "step-5-preview.workbuddy",
         "DeepSeek-V4.1-Flash-1017.codex",
         "DeepSeek-V4.1-Flash-1017.workbuddy",
+        "DeepSeek-V4.1-Flash-1017.trae-cn",
+        "DeepSeek-V4.1-Flash-1017.deepseek-harness",
         "MiniMax-M3.1-Flash.workbuddy"
       ],
       "reviews": {
@@ -63,7 +67,9 @@ window.HOTBENCH_DATA = {
         "mimo-v2.6-pro.workbuddy": "逻辑正确，但蛇头没画眼睛，整体观感和 Space-Bunny 很接近。",
         "DeepSeek-V4.1-Flash-1017.codex": "这是我见过做的最好的贪吃蛇，没有之一！移动丝滑，还做了经典和穿墙两个模式，整体界面布局很干净。",
         "MiniMax-M3.1-Flash.workbuddy": "一轮通过，逻辑正确，没有延迟",
-        "DeepSeek-V4.1-Flash-1017.workbuddy": "一轮通过，逻辑正确，没有延迟"
+        "DeepSeek-V4.1-Flash-1017.workbuddy": "一轮通过，逻辑正确，没有延迟",
+        "DeepSeek-V4.1-Flash-1017.trae-cn": "一轮通过，逻辑正确，没有延迟，锦上添花的是做了吃到果子时候果子碎裂的特效。",
+        "DeepSeek-V4.1-Flash-1017.deepseek-harness": "一轮通过，逻辑正确，蛇连贯运动，旁边的提示文字做得很好；还做了蛇吐舌和吃到东西时候的特效，不错。"
       },
       "reviewsUrl": "snake/snake.reviews.json",
       "runs": [
@@ -74,6 +80,24 @@ window.HOTBENCH_DATA = {
           "attempt": 1,
           "file": "snake/snake.DeepSeek-V4.1-Flash-1017.codex.1/snake.DeepSeek-V4.1-Flash-1017.codex.1.html",
           "shot": "snake/snake.DeepSeek-V4.1-Flash-1017.codex.1/snake.DeepSeek-V4.1-Flash-1017.codex.1.png",
+          "tone": "green"
+        },
+        {
+          "id": "DeepSeek-V4.1-Flash-1017.deepseek-harness.1",
+          "model": "DeepSeek-V4.1-Flash-1017",
+          "harness": "deepseek-harness",
+          "attempt": 1,
+          "file": "snake/snake.DeepSeek-V4.1-Flash-1017.deepseek-harness.1/snake.DeepSeek-V4.1-Flash-1017.deepseek-harness.1.html",
+          "shot": "snake/snake.DeepSeek-V4.1-Flash-1017.deepseek-harness.1/snake.DeepSeek-V4.1-Flash-1017.deepseek-harness.1.png",
+          "tone": "green"
+        },
+        {
+          "id": "DeepSeek-V4.1-Flash-1017.trae-cn.1",
+          "model": "DeepSeek-V4.1-Flash-1017",
+          "harness": "trae-cn",
+          "attempt": 1,
+          "file": "snake/snake.DeepSeek-V4.1-Flash-1017.trae-cn.1/snake.DeepSeek-V4.1-Flash-1017.trae-cn.1.html",
+          "shot": "snake/snake.DeepSeek-V4.1-Flash-1017.trae-cn.1/snake.DeepSeek-V4.1-Flash-1017.trae-cn.1.png",
           "tone": "green"
         },
         {
@@ -164,12 +188,14 @@ window.HOTBENCH_DATA = {
         "deepseek-v41-flash.codex": "第 1 轮就画得很完整，只是多了一只碍眼的骑行水壶；第 2 轮修掉后两轮内过关。",
         "deepseek-v41-flash.workbuddy": "第 1 轮鹈鹕的腿直接飞出去了，第 2 轮完全修好，纠错速度不错。",
         "glm-5.3-flash.workbuddy": "第 1 轮踏板直接飞出、脚在左右摆荡，根本没在转；第 2 轮修好，两轮内过关。",
-        "hy4-preview.workbuddy": "第 1 轮就通过，物理没有崩坏，是这条赛题上最干脆的选手。",
+        "hy4-preview.workbuddy": "第 1 轮运动逻辑和空间位置都正确，鹈鹕画的略微丑。",
         "space-bunny.workbuddy": "两次机会内没修好：第 1 轮背景（山、树、路虚线）会跳变，第 2 轮路肩又跳变。",
         "step-5-preview.workbuddy": "两次机会都没过：第 1 轮腿像纸片一样翻转，第 2 轮画蛇添足把两条腿连成了橙色三角形。",
         "mimo-v2.6-pro.workbuddy": "第 1 轮腿在摆动，没有随踏板一起移动；第 2 轮代表脚的那个椭圆放得太靠上，小腿在脚之下还多出一截。",
         "DeepSeek-V4.1-Flash-1017.codex": "第 1 轮就做出了空间位置和运动逻辑正确的作品，唯一不足的是鹈鹕是白眼，勉强过关。",
         "DeepSeek-V4.1-Flash-1017.workbuddy": "第 1 轮运动逻辑和空间位置都正确，不足的是踏板旋转速度过慢，看起来像老年人中的老年人骑自行车，勉强过关。",
+        "DeepSeek-V4.1-Flash-1017.trae-cn": "第 1 轮运动逻辑和空间位置都正确，甚至还细心的做了气门芯，非常不错，一轮过关。",
+        "DeepSeek-V4.1-Flash-1017.deepseek-harness": "第 1 轮运动逻辑正确，但是路中心虚线和海浪滚动方向不对；第 2 轮修正，过关。",
         "MiniMax-M3.1-Flash.workbuddy": "两次机会都没过：第 1 轮看起来踏板只有一侧，另一条腿看起来悬空转；第 2 轮加了膝盖，并把踏板修好了，但是膝盖是向后弯的。"
       },
       "reviewsUrl": "pelican-bicycle/pelican-bicycle.reviews.json",
@@ -180,6 +206,30 @@ window.HOTBENCH_DATA = {
           "harness": "codex",
           "attempt": 1,
           "file": "pelican-bicycle/pelican-bicycle.DeepSeek-V4.1-Flash-1017.codex.1/pelican-bicycle.DeepSeek-V4.1-Flash-1017.codex.1.html",
+          "tone": "green"
+        },
+        {
+          "id": "DeepSeek-V4.1-Flash-1017.deepseek-harness.1",
+          "model": "DeepSeek-V4.1-Flash-1017",
+          "harness": "deepseek-harness",
+          "attempt": 1,
+          "file": "pelican-bicycle/pelican-bicycle.DeepSeek-V4.1-Flash-1017.deepseek-harness.1/pelican-bicycle.DeepSeek-V4.1-Flash-1017.deepseek-harness.1.html",
+          "tone": "red"
+        },
+        {
+          "id": "DeepSeek-V4.1-Flash-1017.deepseek-harness.2",
+          "model": "DeepSeek-V4.1-Flash-1017",
+          "harness": "deepseek-harness",
+          "attempt": 2,
+          "file": "pelican-bicycle/pelican-bicycle.DeepSeek-V4.1-Flash-1017.deepseek-harness.2/pelican-bicycle.DeepSeek-V4.1-Flash-1017.deepseek-harness.2.html",
+          "tone": "green"
+        },
+        {
+          "id": "DeepSeek-V4.1-Flash-1017.trae-cn.1",
+          "model": "DeepSeek-V4.1-Flash-1017",
+          "harness": "trae-cn",
+          "attempt": 1,
+          "file": "pelican-bicycle/pelican-bicycle.DeepSeek-V4.1-Flash-1017.trae-cn.1/pelican-bicycle.DeepSeek-V4.1-Flash-1017.trae-cn.1.html",
           "tone": "green"
         },
         {

@@ -8,5 +8,7 @@
   "mimo-v2.6-pro.workbuddy": "逻辑正确，但蛇头没画眼睛，整体观感和 Space-Bunny 很接近。",
   "DeepSeek-V4.1-Flash-1017.codex": "这是我见过做的最好的贪吃蛇，没有之一！移动丝滑，还做了经典和穿墙两个模式，整体界面布局很干净。",
   "MiniMax-M3.1-Flash.workbuddy": "一轮通过，逻辑正确，没有延迟",
-  "DeepSeek-V4.1-Flash-1017.workbuddy": "一轮通过，逻辑正确，没有延迟"
+  "DeepSeek-V4.1-Flash-1017.workbuddy": "一轮通过，逻辑正确，没有延迟",
+  "DeepSeek-V4.1-Flash-1017.trae-cn": "一轮通过，逻辑正确，没有延迟，锦上添花的是做了吃到果子时候果子碎裂的特效。",
+  "DeepSeek-V4.1-Flash-1017.deepseek-harness": "一轮通过，逻辑正确，蛇连贯运动，旁边的提示文字做得很好；还做了蛇吐舌和吃到东西时候的特效，不错。"
 }

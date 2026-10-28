@@ -36,6 +36,8 @@ const SKIP_DIRS = new Set([
 const DEFAULT_HARNESS_LABELS = {
   codex: 'Codex',
   workbuddy: 'WorkBuddy',
+  'deepseek-harness': 'DeepSeek Harness',
+  'trae-cn': 'TRAE',
   claude: 'Claude',
   'claude-code': 'Claude Code',
   cursor: 'Cursor',
