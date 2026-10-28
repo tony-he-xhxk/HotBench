@@ -200,7 +200,7 @@
     entries.forEach(function (entry) {
       html += '<section class="entry" data-key="' + escapeHtml(entry.key) + '">' +
         '<h3 class="entry-title">' + escapeHtml(entry.title) + '</h3>' +
-        '<div class="previews">' +
+        '<div class="previews" data-count="' + entry.runs.length + '">' +
           entry.runs.map(function (run) { return previewCard(entry, run); }).join('') +
         '</div>' +
         (entry.review

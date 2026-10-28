@@ -307,6 +307,12 @@ button { font-family: inherit; }
   flex: 1 1 320px;
   max-width: 570px;
 }
+/* 3 个效果（含异常轮次）在宽屏一行三等分 */
+.previews[data-count="3"] {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.previews[data-count="3"] .preview { max-width: none; }
 .shot {
   position: relative;
   /* 与 main.js 中的 FRAME_W / FRAME_H 保持同一比例（1280 × 1000） */
@@ -367,14 +373,14 @@ button { font-family: inherit; }
   flex-direction: column;
   justify-content: center;
   width: 100%;
-  padding: 22px 26px;
+  padding: 18px 20px;
   background: #fff1f0;
   border-color: #f3c9c6;
   color: #a12622;
   text-align: left;
   cursor: zoom-in;
-  font-size: 13.5px;
-  line-height: 1.85;
+  font-size: 16px;
+  line-height: 1.9;
 }
 .shot-abnormal .dump-preview { white-space: pre-wrap; word-break: break-word; }
 .shot-abnormal .shot-zoom { position: absolute; right: 0; bottom: 0; }
@@ -541,13 +547,18 @@ button { font-family: inherit; }
   padding: 26px 30px;
   background: #fff1f0;
   color: #a12622;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.9;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 body.lightbox-open { overflow: hidden; }
+
+/* 中等及以下屏幕：三个效果改为一行一个 */
+@media (max-width: 860px) {
+  .previews[data-count="3"] { grid-template-columns: 1fr; }
+}
 
 /* ===== 移动端 ===== */
 @media (max-width: 640px) {
