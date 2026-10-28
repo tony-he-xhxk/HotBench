@@ -79,7 +79,7 @@ window.HOTBENCH_DATA = {
           "harness": "codex",
           "attempt": 1,
           "file": "snake/snake.DeepSeek-V4.1-Flash-1017.codex.1/snake.DeepSeek-V4.1-Flash-1017.codex.1.html",
-          "shot": "snake/snake.DeepSeek-V4.1-Flash-1017.codex.1/snake.DeepSeek-V4.1-Flash-1017.codex.1.png",
+          "shot": "snake/snake.DeepSeek-V4.1-Flash-1017.codex.1/snake.DeepSeek-V4.1-Flash-1017.codex.1.webp",
           "tone": "green"
         },
         {
@@ -88,7 +88,7 @@ window.HOTBENCH_DATA = {
           "harness": "deepseek-harness",
           "attempt": 1,
           "file": "snake/snake.DeepSeek-V4.1-Flash-1017.deepseek-harness.1/snake.DeepSeek-V4.1-Flash-1017.deepseek-harness.1.html",
-          "shot": "snake/snake.DeepSeek-V4.1-Flash-1017.deepseek-harness.1/snake.DeepSeek-V4.1-Flash-1017.deepseek-harness.1.png",
+          "shot": "snake/snake.DeepSeek-V4.1-Flash-1017.deepseek-harness.1/snake.DeepSeek-V4.1-Flash-1017.deepseek-harness.1.webp",
           "tone": "green"
         },
         {
@@ -97,7 +97,7 @@ window.HOTBENCH_DATA = {
           "harness": "trae-cn",
           "attempt": 1,
           "file": "snake/snake.DeepSeek-V4.1-Flash-1017.trae-cn.1/snake.DeepSeek-V4.1-Flash-1017.trae-cn.1.html",
-          "shot": "snake/snake.DeepSeek-V4.1-Flash-1017.trae-cn.1/snake.DeepSeek-V4.1-Flash-1017.trae-cn.1.png",
+          "shot": "snake/snake.DeepSeek-V4.1-Flash-1017.trae-cn.1/snake.DeepSeek-V4.1-Flash-1017.trae-cn.1.webp",
           "tone": "green"
         },
         {
@@ -106,7 +106,7 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 1,
           "file": "snake/snake.DeepSeek-V4.1-Flash-1017.workbuddy.1/snake.DeepSeek-V4.1-Flash-1017.workbuddy.1.html",
-          "shot": "snake/snake.DeepSeek-V4.1-Flash-1017.workbuddy.1/snake.DeepSeek-V4.1-Flash-1017.workbuddy.1.png",
+          "shot": "snake/snake.DeepSeek-V4.1-Flash-1017.workbuddy.1/snake.DeepSeek-V4.1-Flash-1017.workbuddy.1.webp",
           "tone": "green"
         },
         {
@@ -115,7 +115,7 @@ window.HOTBENCH_DATA = {
           "harness": "codex",
           "attempt": 1,
           "file": "snake/snake.deepseek-v41-flash.codex.1/snake.deepseek-v41-flash.codex.1.html",
-          "shot": "snake/snake.deepseek-v41-flash.codex.1/snake.deepseek-v41-flash.codex.1.png",
+          "shot": "snake/snake.deepseek-v41-flash.codex.1/snake.deepseek-v41-flash.codex.1.webp",
           "tone": "green"
         },
         {
@@ -124,7 +124,7 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 1,
           "file": "snake/snake.deepseek-v41-flash.workbuddy.1/snake.deepseek-v41-flash.workbuddy.1.html",
-          "shot": "snake/snake.deepseek-v41-flash.workbuddy.1/snake.deepseek-v41-flash.workbuddy.1.png",
+          "shot": "snake/snake.deepseek-v41-flash.workbuddy.1/snake.deepseek-v41-flash.workbuddy.1.webp",
           "tone": "red"
         },
         {
@@ -133,7 +133,7 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 1,
           "file": "snake/snake.glm-5.3-flash.workbuddy.1/snake.glm-5.3-flash.workbuddy.1.html",
-          "shot": "snake/snake.glm-5.3-flash.workbuddy.1/snake.glm-5.3-flash.workbuddy.1.png",
+          "shot": "snake/snake.glm-5.3-flash.workbuddy.1/snake.glm-5.3-flash.workbuddy.1.webp",
           "tone": "red"
         },
         {
@@ -142,7 +142,7 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 1,
           "file": "snake/snake.mimo-v2.6-pro.workbuddy.1/snake.mimo-v2.6-pro.workbuddy.1.html",
-          "shot": "snake/snake.mimo-v2.6-pro.workbuddy.1/snake.mimo-v2.6-pro.workbuddy.1.png",
+          "shot": "snake/snake.mimo-v2.6-pro.workbuddy.1/snake.mimo-v2.6-pro.workbuddy.1.webp",
           "tone": "yellow"
         },
         {
@@ -151,7 +151,7 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 1,
           "file": "snake/snake.MiniMax-M3.1-Flash.workbuddy.1/snake.MiniMax-M3.1-Flash.workbuddy.1.html",
-          "shot": "snake/snake.MiniMax-M3.1-Flash.workbuddy.1/snake.MiniMax-M3.1-Flash.workbuddy.1.png",
+          "shot": "snake/snake.MiniMax-M3.1-Flash.workbuddy.1/snake.MiniMax-M3.1-Flash.workbuddy.1.webp",
           "tone": "green"
         },
         {
@@ -160,7 +160,7 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 1,
           "file": "snake/snake.space-bunny.workbuddy.1/snake.space-bunny.workbuddy.1.html",
-          "shot": "snake/snake.space-bunny.workbuddy.1/snake.space-bunny.workbuddy.1.png",
+          "shot": "snake/snake.space-bunny.workbuddy.1/snake.space-bunny.workbuddy.1.webp",
           "tone": "yellow"
         },
         {
@@ -169,7 +169,7 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 1,
           "file": "snake/snake.step-5-preview.workbuddy.1/snake.step-5-preview.workbuddy.1.html",
-          "shot": "snake/snake.step-5-preview.workbuddy.1/snake.step-5-preview.workbuddy.1.png",
+          "shot": "snake/snake.step-5-preview.workbuddy.1/snake.step-5-preview.workbuddy.1.webp",
           "tone": "red"
         }
       ]

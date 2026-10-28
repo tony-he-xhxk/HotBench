@@ -17,7 +17,7 @@
 ├── <benchmark>.reviews.json           每个 Model × Harness 的短评（可选）
 └── <benchmark>.<model>.<harness>.<n>/ 一次实测
     ├── <benchmark>.<model>.<harness>.<n>.html
-    └── <benchmark>.<model>.<harness>.<n>.png   初始界面截图（可选）
+    └── <benchmark>.<model>.<harness>.<n>.png/.webp   初始界面截图（可选）
 
         │  tools/build-index.mjs   扫描目录、解析文件夹名、读配置和文本文件
         ▼
@@ -53,7 +53,8 @@
   刚推上去的新实测因此不用等缓存过期，刷新即可看到。
 - **放大**：点预览弹出大图（同一份 HTML 再开一个 iframe 实时运行），带「在新标签页打开」，Esc 或点背景关闭。
 - **截图型实测**：实测文件夹里放了同名 png 时，卡片改显示这张截图，点击直接在新标签页打开 HTML（不跑 iframe、
-  也没有放大）。适合「打开就能玩」的小游戏这类不适合内嵌的页面，用 `node tools/snapshot.mjs <html>` 生成截图。
+  也没有放大）。适合「打开就能玩」的小游戏这类不适合内嵌的页面，用 `node tools/snapshot.mjs <html> --webp` 生成截图。
+  WebP q85 的体积通常只有 PNG 的 10% 左右，肉眼几乎无差别，能明显加快图片加载。
 - **条目 = Model × Harness**：每个组合一个条目，标题形如 `DeepSeek-V4.1-Flash × WorkBuddy`；
   条目里并排放该组合的前 1~2 次效果（宽度够时一行显示），下方是这个组合的一句短评。
 - **段位**：`<项目名>.meta.json` 的 `tier` / `chances` 决定项目卡上的段位徽章（青铜 / 白银 / 金牌）
@@ -134,8 +135,8 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
 2. 放入 `新benchmark名.prompt.txt`（页面上会折叠展示）；
 3. 可选：放入 `新benchmark名.meta.json`（段位、机会次数、指示灯颜色）和 `新benchmark名.reviews.json`（条目短评）；
 4. 把每次实测的 HTML 按上面的命名约定放进去；
-5. 可选：想用截图卡片就在实测文件夹里放一张同名 png（比例建议与卡片一致：1280×1000 或 900×703），
-   直接跑 `node tools/snapshot.mjs <那个 html>` 生成即可；
+5. 可选：想用截图卡片就在实测文件夹里放一张同名 png/webp（比例建议与卡片一致：1280×1000 或 900×703），
+   直接跑 `node tools/snapshot.mjs <那个 html> --webp` 生成即可；
 6. 生成数据文件：
 
    ```bash
