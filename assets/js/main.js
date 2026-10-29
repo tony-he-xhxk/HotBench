@@ -316,6 +316,9 @@
     var tierBadge = tier
       ? '<span class="tier-badge ' + tier.className + '">' + escapeHtml(tier.text) + '</span>'
       : '';
+    if (tier && String(project.tier || '').toLowerCase() === 'gold') {
+      tierBadge += '<span class="unlock-badge">任意青铜、白银题满分方可解锁</span>';
+    }
 
     var entries = entriesOf(project);
     var detail = mode === 'detail';
