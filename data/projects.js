@@ -385,11 +385,13 @@ window.HOTBENCH_DATA = {
       "entryOrder": [
         "DeepSeek-V4.1-Flash-1017.codex",
         "DeepSeek-V4.1-Flash-1017.workbuddy",
+        "hy4-preview.workbuddy",
         "DeepSeek-V4.1-Flash-1017.trae-cn"
       ],
       "reviews": {
         "DeepSeek-V4.1-Flash-1017.codex": "第 1 轮，自动车停在了面馆，离居民楼还有一段距离就显示已送达，第 2 轮修复完毕。",
         "DeepSeek-V4.1-Flash-1017.workbuddy": "第 1 轮逻辑全部正常，一轮通关。",
+        "hy4-preview.workbuddy": "一轮通过，逻辑没有问题！",
         "DeepSeek-V4.1-Flash-1017.trae-cn": "前两轮均因思考过程太长超出限制，被Harness异常打断，两轮均无成品即视为放弃第3轮参赛，最终没有成品。"
       },
       "reviewsUrl": "panda-waimai/panda-waimai.reviews.json",
@@ -445,6 +447,14 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 1,
           "file": "panda-waimai/panda-waimai.DeepSeek-V4.1-Flash-1017.workbuddy.1/panda-waimai.DeepSeek-V4.1-Flash-1017.workbuddy.1.html",
+          "tone": "green"
+        },
+        {
+          "id": "hy4-preview.workbuddy.1",
+          "model": "hy4-preview",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "panda-waimai/panda-waimai.hy4-preview.workbuddy.1/panda-waimai.hy4-preview.workbuddy.1.html",
           "tone": "green"
         }
       ]

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>熊猫外卖员 · 安全送达</title>
+<style>
+  :root{
+    --mint:#2bb3a6;
+    --ink:#22303a;
+    --line:#e3eaee;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:#f2f6f8;
+    color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 44px}
+  h1{font-size:19px;margin:0 0 6px;font-weight:700;letter-spacing:.5px}
+  .sub{font-size:13px;color:#6b7c88;margin:0 0 14px;line-height:1.7}
+  .stage{
+    background:#fff;border-radius:16px;overflow:hidden;
+    box-shadow:0 8px 26px rgba(30,60,80,.12);
+  }
+  svg{display:block;width:100%;height:auto}
+  svg text{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif}
+
+  .hud{
+    display:flex;align-items:center;gap:14px;
+    padding:11px 16px;border-top:1px solid var(--line);background:#fbfdfd;
+  }
+  button{
+    font:inherit;font-size:14px;font-weight:600;
+    padding:8px 18px;border-radius:999px;
+    border:1px solid var(--mint);background:var(--mint);color:#fff;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  button.secondary{background:#fff;color:#1e9188}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .bar{flex:1;height:8px;background:#e6ecef;border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8fe0d6,#2bb3a6);border-radius:99px}
+  .state{font-size:13px;color:#5b6c78;min-width:4.5em;text-align:right}
+
+  /* 送达提示卡：默认隐藏，只有动画结束后才出现（由 JS 控制，绝不自动循环） */
+  #done{
+    opacity:0;visibility:hidden;
+    transform-box:view-box;transform-origin:240px 108px;
+  }
+  #done.on{visibility:visible;animation:pop .55s cubic-bezier(.2,1.5,.4,1) forwards}
+  @keyframes pop{
+    0%{opacity:0;transform:scale(.72) translateY(12px)}
+    60%{opacity:1;transform:scale(1.06) translateY(0)}
+    100%{opacity:1;transform:scale(1) translateY(0)}
+  }
+  #bag{opacity:0;transition:opacity .5s ease}
+  #bag.on{opacity:1}
+  .note{font-size:12.5px;color:#7c8b96;margin:10px 2px 0;line-height:1.7}
+  kbd{
+    font:inherit;font-size:11.5px;background:#eef3f5;border:1px solid #dbe4e8;
+    border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:#4d5c66;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>熊猫外卖员 · 安全送达</h1>
+  <p class="sub">
+    全程单向行驶：阿婆包子铺 → 鲜果时光 → 好运便利店 → 川味小炒 → 晨光文具，共 5 家带招牌商铺，不重复经过同一家店；终点为幸福里 3 号楼。
+  </p>
+
+  <div class="stage">
+    <svg id="scene" viewBox="0 0 1000 460" role="img" aria-label="熊猫骑电动车送外卖，佩戴头盔与反光背心，沿街道单向行驶，最终停在居民楼楼下">
+      <defs>
+        <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#bde5f4"/>
+          <stop offset="1" stop-color="#f5fbff"/>
+        </linearGradient>
+        <linearGradient id="roadG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#737c88"/>
+          <stop offset="1" stop-color="#5a626d"/>
+        </linearGradient>
+        <linearGradient id="beamG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#ffe680" stop-opacity=".5"/>
+          <stop offset="1" stop-color="#ffe680" stop-opacity="0"/>
+        </linearGradient>
+        <pattern id="tile" width="42" height="30" patternUnits="userSpaceOnUse">
+          <rect width="42" height="30" fill="#e8edf0"/>
+          <path d="M42 0V30M0 30H42" stroke="#d6dee3" stroke-width="2" fill="none"/>
+        </pattern>
+
+        <g id="tree">
+          <rect x="-6" y="-40" width="12" height="40" fill="#8a6a4a"/>
+          <circle cx="-17" cy="-42" r="18" fill="#57b473"/>
+          <circle cx="17" cy="-44" r="17" fill="#45a063"/>
+          <circle cx="0" cy="-52" r="26" fill="#4fa86a"/>
+          <circle cx="0" cy="-66" r="15" fill="#5cbb7a"/>
+        </g>
+
+        <g id="lamp">
+          <rect x="-4" y="-160" width="8" height="154" fill="#8a939e"/>
+          <path d="M0 -152H30" stroke="#8a939e" stroke-width="6" stroke-linecap="round"/>
+          <path d="M27 -152v9" stroke="#8a939e" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="30" cy="-137" r="9" fill="#ffe9a8"/>
+          <circle cx="30" cy="-137" r="9" fill="none" stroke="#e5c86f" stroke-width="2"/>
+          <rect x="-10" y="-8" width="20" height="8" rx="3" fill="#6d7783"/>
+        </g>
+      </defs>
+
+      <rect x="0" y="0" width="1000" height="460" fill="#eaf3f7"/>
+      <rect x="0" y="0" width="1000" height="330" fill="url(#skyG)"/>
+
+      <!-- 太阳 -->
+      <g>
+        <circle cx="940" cy="88" r="46" fill="#ffe9a8" opacity=".45"/>
+        <circle cx="940" cy="88" r="26" fill="#ffd45e"/>
+      </g>
+
+      <!-- 远景层（视差 0.35） -->
+      <g id="far">
+        <g fill="#c9dcea">
+          <rect x="-60" y="200" width="90" height="96"/>
+          <rect x="120" y="216" width="60" height="80"/>
+          <rect x="280" y="162" width="64" height="134"/>
+          <rect x="460" y="182" width="72" height="114"/>
+          <rect x="620" y="166" width="80" height="128"/>
+          <rect x="810" y="176" width="70" height="118"/>
+          <rect x="960" y="186" width="84" height="108"/>
+          <rect x="1135" y="206" width="90" height="88"/>
+          <rect x="1318" y="216" width="66" height="78"/>
+          <rect x="1485" y="200" width="90" height="94"/>
+          <rect x="1665" y="210" width="60" height="84"/>
+          <rect x="1830" y="162" width="70" height="132"/>
+        </g>
+        <g fill="#b8cfe2">
+          <rect x="40" y="170" width="70" height="126"/>
+          <rect x="190" y="186" width="80" height="108"/>
+          <rect x="360" y="206" width="90" height="88"/>
+          <rect x="545" y="216" width="66" height="78"/>
+          <rect x="710" y="200" width="90" height="94"/>
+          <rect x="890" y="212" width="60" height="82"/>
+          <rect x="1055" y="160" width="70" height="134"/>
+          <rect x="1235" y="180" width="72" height="114"/>
+          <rect x="1395" y="166" width="80" height="128"/>
+          <rect x="1585" y="176" width="70" height="118"/>
+          <rect x="1735" y="186" width="84" height="108"/>
+          <rect x="1910" y="206" width="90" height="88"/>
+        </g>
+      </g>
+
+      <!-- 主世界层（视差 1） -->
+      <g id="world">
+        <!-- 人行道 + 马路 -->
+        <rect x="-200" y="288" width="3800" height="30" fill="url(#tile)"/>
+        <rect x="-200" y="316" width="3800" height="8" fill="#b9c4cc"/>
+        <rect x="-200" y="322" width="3800" height="138" fill="url(#roadG)"/>
+        <line x1="-200" y1="352" x2="3600" y2="352" stroke="#f2f6f8" stroke-width="4"
+              stroke-dasharray="46 34" opacity=".85"/>
+        <line x1="-200" y1="440" x2="3600" y2="440" stroke="#f2f6f8" stroke-width="3" opacity=".45"/>
+
+        <!-- 斑马线 -->
+        <g opacity=".7" fill="#f4f8fa">
+          <rect x="2680" y="326" width="20" height="130"/>
+          <rect x="2712" y="326" width="20" height="130"/>
+          <rect x="2744" y="326" width="20" height="130"/>
+          <rect x="2776" y="326" width="20" height="130"/>
+          <rect x="2808" y="326" width="20" height="130"/>
+        </g>
+
+        <!-- 商铺 1：阿婆包子铺 -->
+        <g>
+          <rect x="300" y="110" width="220" height="180" fill="#f8e5cd"/>
+          <rect x="286" y="98" width="248" height="16" rx="5" fill="#cbb096"/>
+          <rect x="316" y="126" width="188" height="48" rx="9" fill="#33414c"/>
+          <rect x="316" y="126" width="188" height="48" rx="9" fill="none" stroke="#e9bf5c" stroke-width="2.5"/>
+          <text x="410" y="161" text-anchor="middle" font-size="25" font-weight="700" fill="#fff">阿婆包子铺</text>
+          <rect x="330" y="252" width="52" height="38" rx="3" fill="#bcd9e8"/>
+          <rect x="438" y="252" width="52" height="38" rx="3" fill="#bcd9e8"/>
+          <path d="M330 234h120l-8 12h-104z" fill="#e06b5c"/>
+          <rect x="388" y="240" width="46" height="50" fill="#8f6a48"/>
+          <rect x="388" y="240" width="46" height="50" fill="none" stroke="#6d503a" stroke-width="2"/>
+        </g>
+
+        <!-- 商铺 2：鲜果时光 -->
+        <g>
+          <rect x="780" y="110" width="220" height="180" fill="#e9f2e3"/>
+          <rect x="766" y="98" width="248" height="16" rx="5" fill="#b6c8ad"/>
+          <rect x="796" y="126" width="188" height="48" rx="9" fill="#3f7d4f"/>
+          <rect x="796" y="126" width="188" height="48" rx="9" fill="none" stroke="#f2d98a" stroke-width="2.5"/>
+          <text x="890" y="161" text-anchor="middle" font-size="25" font-weight="700" fill="#fff">鲜果时光</text>
+          <rect x="810" y="252" width="52" height="38" rx="3" fill="#cfe6d0"/>
+          <rect x="918" y="252" width="52" height="38" rx="3" fill="#cfe6d0"/>
+          <path d="M810 234h120l-8 12h-104z" fill="#63a86f"/>
+          <rect x="868" y="240" width="46" height="50" fill="#7d5a3c"/>
+          <rect x="868" y="240" width="46" height="50" fill="none" stroke="#5f442c" stroke-width="2"/>
+          <circle cx="826" cy="265" r="9" fill="#f4a34a"/>
+          <circle cx="852" cy="265" r="8" fill="#e2584f"/>
+        </g>
+
+        <!-- 商铺 3：好运便利店 -->
+        <g>
+          <rect x="1260" y="110" width="220" height="180" fill="#e6eef8"/>
+          <rect x="1246" y="98" width="248" height="16" rx="5" fill="#b3c1d4"/>
+          <rect x="1276" y="126" width="188" height="48" rx="9" fill="#2b6cb0"/>
+          <rect x="1276" y="126" width="188" height="48" rx="9" fill="none" stroke="#ffd75e" stroke-width="2.5"/>
+          <text x="1370" y="161" text-anchor="middle" font-size="25" font-weight="700" fill="#fff">好运便利店</text>
+          <rect x="1290" y="252" width="52" height="38" rx="3" fill="#cfe0ef"/>
+          <rect x="1398" y="252" width="52" height="38" rx="3" fill="#cfe0ef"/>
+          <path d="M1290 234h120l-8 12h-104z" fill="#4a90d9"/>
+          <rect x="1348" y="240" width="46" height="50" fill="#5f6f80"/>
+          <rect x="1348" y="240" width="46" height="50" fill="none" stroke="#485563" stroke-width="2"/>
+        </g>
+
+        <!-- 商铺 4：川味小炒 -->
+        <g>
+          <rect x="1740" y="110" width="220" height="180" fill="#fce3d8"/>
+          <rect x="1726" y="98" width="248" height="16" rx="5" fill="#cbb096"/>
+          <rect x="1756" y="126" width="188" height="48" rx="9" fill="#b23a2f"/>
+          <rect x="1756" y="126" width="188" height="48" rx="9" fill="none" stroke="#f5cf6a" stroke-width="2.5"/>
+          <text x="1850" y="161" text-anchor="middle" font-size="25" font-weight="700" fill="#fff">川味小炒</text>
+          <rect x="1770" y="252" width="52" height="38" rx="3" fill="#f0d3c6"/>
+          <rect x="1878" y="252" width="52" height="38" rx="3" fill="#f0d3c6"/>
+          <path d="M1770 234h120l-8 12h-104z" fill="#d1543f"/>
+          <rect x="1828" y="240" width="46" height="50" fill="#8a5a3a"/>
+          <rect x="1828" y="240" width="46" height="50" fill="none" stroke="#6a442b" stroke-width="2"/>
+        </g>
+
+        <!-- 商铺 5：晨光文具 -->
+        <g>
+          <rect x="2220" y="110" width="220" height="180" fill="#f0eef9"/>
+          <rect x="2206" y="98" width="248" height="16" rx="5" fill="#bfbcd4"/>
+          <rect x="2236" y="126" width="188" height="48" rx="9" fill="#6b4fa0"/>
+          <rect x="2236" y="126" width="188" height="48" rx="9" fill="none" stroke="#ffe9a8" stroke-width="2.5"/>
+          <text x="2330" y="161" text-anchor="middle" font-size="25" font-weight="700" fill="#fff">晨光文具</text>
+          <rect x="2250" y="252" width="52" height="38" rx="3" fill="#ddd9ef"/>
+          <rect x="2358" y="252" width="52" height="38" rx="3" fill="#ddd9ef"/>
+          <path d="M2250 234h120l-8 12h-104z" fill="#8b6fc0"/>
+          <rect x="2308" y="240" width="46" height="50" fill="#7a6a55"/>
+          <rect x="2308" y="240" width="46" height="50" fill="none" stroke="#5d5040" stroke-width="2"/>
+        </g>
+
+        <!-- 红绿灯 -->
+        <g transform="translate(620,0)">
+          <rect x="-4" y="150" width="8" height="140" fill="#6b7580"/>
+          <rect x="-20" y="104" width="40" height="76" rx="9" fill="#2b333c"/>
+          <circle cx="0" cy="120" r="9" fill="#5a5a5a"/>
+          <circle cx="0" cy="143" r="9" fill="#5a5a5a"/>
+          <circle cx="0" cy="166" r="9" fill="#4cd07a"/>
+          <circle cx="0" cy="166" r="12" fill="none" stroke="#4cd07a" stroke-width="2" opacity=".45"/>
+          <rect x="-12" y="286" width="24" height="6" rx="2" fill="#5c6771"/>
+        </g>
+
+        <!-- 行道树与路灯 -->
+        <use href="#tree" transform="translate(700,290)"/>
+        <use href="#tree" transform="translate(1120,290)"/>
+        <use href="#lamp" transform="translate(1180,290)"/>
+        <use href="#tree" transform="translate(1600,290)"/>
+        <use href="#tree" transform="translate(2080,290)"/>
+        <use href="#lamp" transform="translate(2140,290)"/>
+        <use href="#tree" transform="translate(2560,290)"/>
+        <use href="#lamp" transform="translate(2620,290)"/>
+        <use href="#tree" transform="translate(3240,290)"/>
+        <use href="#tree" transform="translate(3340,290)"/>
+
+        <!-- 终点：居民楼（幸福里 3 号楼） -->
+        <g>
+          <rect x="2820" y="40" width="340" height="250" fill="#f7e9d7"/>
+          <rect x="2820" y="40" width="340" height="250" fill="none" stroke="#e2cfb5" stroke-width="2"/>
+          <rect x="2806" y="28" width="368" height="16" rx="4" fill="#c9b195"/>
+          <rect x="2866" y="126" width="56" height="40" rx="3" fill="#cfe3ef"/>
+          <rect x="2950" y="126" width="56" height="40" rx="3" fill="#f6e2a8"/>
+          <rect x="3034" y="126" width="56" height="40" rx="3" fill="#cfe3ef"/>
+          <rect x="2866" y="181" width="56" height="40" rx="3" fill="#f6e2a8"/>
+          <rect x="2950" y="181" width="56" height="40" rx="3" fill="#cfe3ef"/>
+          <rect x="3034" y="181" width="56" height="40" rx="3" fill="#cfe3ef"/>
+          <rect x="2866" y="236" width="56" height="40" rx="3" fill="#cfe3ef"/>
+          <rect x="2950" y="236" width="56" height="40" rx="3" fill="#f6e2a8"/>
+          <!-- 单元门 -->
+          <rect x="3058" y="196" width="82" height="94" fill="#8b6a4a"/>
+          <rect x="3066" y="204" width="66" height="86" fill="#d6e8f2"/>
+          <line x1="3099" y1="204" x2="3099" y2="290" stroke="#b3cbdb" stroke-width="2"/>
+          <rect x="3124" y="242" width="9" height="7" rx="2" fill="#5b6c78"/>
+          <text x="3099" y="192" text-anchor="middle" font-size="13" font-weight="700" fill="#7a6144">单元 302</text>
+          <!-- 楼牌 -->
+          <rect x="2888" y="52" width="204" height="42" rx="8" fill="#33414c"/>
+          <text x="2990" y="82" text-anchor="middle" font-size="24" font-weight="700" fill="#fff">幸福里 3 号楼</text>
+          <!-- 空调外机 -->
+          <rect x="2836" y="150" width="26" height="22" rx="3" fill="#d7dee4"/>
+          <rect x="2836" y="205" width="26" height="22" rx="3" fill="#d7dee4"/>
+          <!-- 阳台栏杆 -->
+          <g stroke="#b9a68d" stroke-width="3">
+            <line x1="2950" y1="228" x2="3006" y2="228"/>
+            <line x1="2956" y1="228" x2="2956" y2="212"/>
+            <line x1="2981" y1="228" x2="2981" y2="212"/>
+            <line x1="3000" y1="228" x2="3000" y2="212"/>
+          </g>
+        </g>
+
+        <!-- 骑手：熊猫 + 电动车 -->
+        <g id="rider">
+          <!-- 车灯光锥 -->
+          <path d="M118 -92L206 -76L206 -106Z" fill="url(#beamG)"/>
+
+          <g id="ebike">
+            <!-- 后货架与支架 -->
+            <rect x="-58" y="-72" width="62" height="8" rx="3" fill="#4a5560"/>
+            <path d="M-22 -70L-16 -34" stroke="#4a5560" stroke-width="5" stroke-linecap="round"/>
+            <!-- 车体与踏板 -->
+            <path d="M2 -34L34 -40L96 -40L104 -30" fill="none" stroke="#3f4a55"
+                  stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="26" y="-46" width="72" height="12" rx="5" fill="#39424c"/>
+            <!-- 前叉 + 车把 -->
+            <path d="M110 -22L100 -90" stroke="#5a6672" stroke-width="7" stroke-linecap="round"/>
+            <path d="M92 -93L118 -97" stroke="#2f3841" stroke-width="9" stroke-linecap="round"/>
+            <!-- 后视镜 -->
+            <path d="M116 -99L126 -106" stroke="#5a6672" stroke-width="4" stroke-linecap="round"/>
+            <ellipse cx="130" cy="-108" rx="7" ry="5" fill="#dbe4ea" stroke="#8a939e" stroke-width="1.5"/>
+            <!-- 座垫 -->
+            <path d="M26 -74h44a6 6 0 010 12H26a6 6 0 010-12z" fill="#2f3841"/>
+            <!-- 车灯 / 尾灯 -->
+            <circle cx="113" cy="-88" r="9" fill="#ffd75e" stroke="#c8a63f" stroke-width="2"/>
+            <rect x="-64" y="-84" width="8" height="13" rx="3" fill="#e05a4a"/>
+            <!-- 号牌 -->
+            <g transform="translate(-52,-66) rotate(-6)">
+              <rect x="0" y="0" width="34" height="20" rx="3" fill="#f8fff9" stroke="#1f7a4d" stroke-width="2"/>
+              <text x="17" y="14" text-anchor="middle" font-size="11" font-weight="700" fill="#1f7a4d">A6688</text>
+            </g>
+            <!-- 轮子 -->
+            <g class="wheel" data-x="0">
+              <path d="M-24 -22A24 24 0 0124 -22" fill="none" stroke="#3f4a55" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="0" cy="-22" r="22" fill="#2b3238"/>
+              <circle cx="0" cy="-22" r="13" fill="#8d9aa6"/>
+              <g stroke="#d6dde3" stroke-width="2.5" stroke-linecap="round">
+                <line x1="-13" y1="-22" x2="13" y2="-22"/>
+                <line x1="-13" y1="-22" x2="13" y2="-22" transform="rotate(60 0 -22)"/>
+                <line x1="-13" y1="-22" x2="13" y2="-22" transform="rotate(120 0 -22)"/>
+              </g>
+              <circle cx="0" cy="-22" r="4" fill="#5b6672"/>
+            </g>
+            <g class="wheel" data-x="110">
+              <path d="M86 -22A24 24 0 01134 -22" fill="none" stroke="#3f4a55" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="110" cy="-22" r="22" fill="#2b3238"/>
+              <circle cx="110" cy="-22" r="13" fill="#8d9aa6"/>
+              <g stroke="#d6dde3" stroke-width="2.5" stroke-linecap="round">
+                <line x1="97" y1="-22" x2="123" y2="-22"/>
+                <line x1="97" y1="-22" x2="123" y2="-22" transform="rotate(60 110 -22)"/>
+                <line x1="97" y1="-22" x2="123" y2="-22" transform="rotate(120 110 -22)"/>
+              </g>
+              <circle cx="110" cy="-22" r="4" fill="#5b6672"/>
+            </g>
+          </g>
+
+          <!-- 外卖保温箱 -->
+          <g id="box">
+            <rect x="-60" y="-128" width="66" height="60" rx="7" fill="#1b6ce8"/>
+            <rect x="-60" y="-128" width="66" height="15" rx="7" fill="#3f88f2"/>
+            <rect x="-60" y="-78" width="66" height="10" rx="4" fill="#134fa8"/>
+            <circle cx="-27" cy="-98" r="15" fill="#ffffff" opacity=".95"/>
+            <text x="-27" y="-93" text-anchor="middle" font-size="13" font-weight="700" fill="#1b6ce8">外卖</text>
+            <rect x="-56" y="-120" width="58" height="4" rx="2" fill="#ffd75e" opacity=".9"/>
+          </g>
+
+          <!-- 熊猫 -->
+          <g id="panda">
+            <path d="M40 -80L64 -74L76 -50" fill="none" stroke="#22262b" stroke-width="13"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="34" y="-118" width="44" height="52" rx="14" fill="#ffd200"/>
+            <rect x="34" y="-99" width="44" height="7" rx="3" fill="#e8eef3"/>
+            <rect x="34" y="-85" width="44" height="7" rx="3" fill="#e8eef3"/>
+            <path d="M62 -110L86 -100L104 -94" fill="none" stroke="#22262b" stroke-width="11"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="48" cy="-158" r="8" fill="#22262b"/>
+            <circle cx="84" cy="-158" r="8" fill="#22262b"/>
+            <circle cx="66" cy="-138" r="21" fill="#fbfbfb" stroke="#e0e0e0" stroke-width="2"/>
+            <ellipse cx="58" cy="-137" rx="6.5" ry="8.5" fill="#22262b" transform="rotate(-14 58 -137)"/>
+            <ellipse cx="76" cy="-137" rx="6.5" ry="8.5" fill="#22262b" transform="rotate(-14 76 -137)"/>
+            <circle cx="60" cy="-139" r="2.6" fill="#ffffff"/>
+            <circle cx="78" cy="-139" r="2.6" fill="#ffffff"/>
+            <ellipse cx="78" cy="-125" rx="4" ry="3" fill="#22262b"/>
+            <path d="M78 -121q-4 4-8 0" stroke="#3a3f45" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+            <!-- 安全头盔 -->
+            <path d="M43 -140A23 23 0 0189 -140Z" fill="#e8463c"/>
+            <path d="M60 -161h8l4 21h-16z" fill="#ffffff" opacity=".9"/>
+            <path d="M84 -141l14 1v6l-14 1z" fill="#c93a31"/>
+            <path d="M50 -136q-3 14 11 19" stroke="#c93a31" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M43 -140h46" stroke="#b8332b" stroke-width="2.5"/>
+          </g>
+
+          <!-- 送达时手中提的外卖袋 -->
+          <g id="bag">
+            <path d="M100 -92q8 -12 16 0" fill="none" stroke="#c9961c" stroke-width="3" stroke-linecap="round"/>
+            <rect x="94" y="-92" width="28" height="30" rx="3" fill="#f5c542"/>
+            <rect x="94" y="-92" width="28" height="30" rx="3" fill="none" stroke="#d9a520" stroke-width="2"/>
+            <text x="108" y="-73" text-anchor="middle" font-size="10" font-weight="700" fill="#8a6a10">外卖</text>
+          </g>
+        </g>
+      </g>
+
+      <!-- 交规装备说明（左下角） -->
+      <g>
+        <rect x="16" y="378" width="234" height="64" rx="10" fill="#ffffff" opacity=".92"/>
+        <rect x="16" y="378" width="234" height="64" rx="10" fill="none" stroke="#dbe4e8" stroke-width="1.5"/>
+        <text x="30" y="398" font-size="12.5" font-weight="700" fill="#5b6c78">交规安全装备（齐全）</text>
+        <text x="30" y="418" font-size="13" fill="#33414c">✓ 头盔　✓ 反光背心　✓ 号牌</text>
+        <text x="30" y="436" font-size="13" fill="#33414c">✓ 车灯　✓ 后视镜　✓ 保温餐箱</text>
+      </g>
+
+      <!-- 送达提示（默认隐藏，动画结束后由 JS 打开） -->
+      <g id="done">
+        <rect x="40" y="36" width="400" height="144" rx="20" fill="#ffffff" opacity=".95"/>
+        <rect x="40" y="36" width="400" height="144" rx="20" fill="none" stroke="#2bb3a6" stroke-width="3"/>
+        <text x="240" y="100" text-anchor="middle" font-size="40" font-weight="800" fill="#2bb3a6">外卖已送达！</text>
+        <text x="240" y="136" text-anchor="middle" font-size="16" fill="#6b7c88">幸福里 3 号楼 · 单元 302</text>
+        <text x="240" y="164" text-anchor="middle" font-size="16" fill="#f0a93a">★★★★★</text>
+      </g>
+    </svg>
+
+    <div class="hud">
+      <button id="btn">▶ 开始配送</button>
+      <div class="bar"><i id="fill"></i></div>
+      <span class="state" id="state">待出发</span>
+    </div>
+  </div>
+
+  <p class="note">
+    快捷键：<kbd>空格</kbd> 播放 / 暂停，<kbd>R</kbd> 重播。动画从头到尾只跑一遍，到达居民楼后自动停住，<b>不会自动重播</b>。
+  </p>
+</div>
+
+<script>
+(function () {
+  var T = 12000;                 // 总时长 ms
+  var P0 = 150, P1 = 2900;       // 骑手世界坐标：起点 / 终点
+  var D = P1 - P0;
+  var MAXCAM = 2400;             // 世界宽 3400 - 视口 1000
+  var WR = 22;                   // 车轮半径
+
+  var A = 0.15, B = 0.86;        // 起步加速段 / 到站减速段
+  var V = 1 / ((B - A) + (A + (1 - B)) / 2);
+
+  var world = document.getElementById('world');
+  var far   = document.getElementById('far');
+  var rider = document.getElementById('rider');
+  var box   = document.getElementById('box');
+  var bag   = document.getElementById('bag');
+  var done  = document.getElementById('done');
+  var fill  = document.getElementById('fill');
+  var btn   = document.getElementById('btn');
+  var state = document.getElementById('state');
+  var wheels = [].slice.call(document.querySelectorAll('.wheel'));
+
+  // 位置随时间的梯形速度曲线：起步缓、中途匀速、到站缓停
+  function ease(t) {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    if (t < A) return V * t * t / (2 * A);
+    if (t < B) return V * A / 2 + V * (t - A);
+    var u = t - B;
+    return V * A / 2 + V * (B - A) + V * u - V * u * u / (2 * (1 - B));
+  }
+
+  function render(p) {
+    var dist = D * p;
+    var wx = P0 + dist;
+    var cam = Math.max(0, Math.min(MAXCAM, wx - 270));
+
+    world.setAttribute('transform', 'translate(' + (-cam) + ' 0)');
+    far.setAttribute('transform', 'translate(' + (-cam * 0.35) + ' 0)');
+
+    var bob = Math.sin(dist * 0.055) * 1.4;
+    rider.setAttribute('transform', 'translate(' + wx + ' ' + (390 + bob) + ')');
+
+    var ang = dist / (2 * Math.PI * WR) * 360;
+    for (var i = 0; i < wheels.length; i++) {
+      var w = wheels[i];
+      w.setAttribute('transform', 'rotate(' + ang + ' ' + w.getAttribute('data-x') + ' -22)');
+    }
+    box.setAttribute('transform', 'rotate(' + (Math.sin(dist * 0.05) * 1.3) + ' -27 -98)');
+    fill.style.width = (p * 100) + '%';
+  }
+
+  var elapsed = 0, last = 0, raf = null, playing = false, finished = false;
+
+  function loop(ts) {
+    if (!last) last = ts;
+    elapsed = Math.min(T, elapsed + (ts - last));
+    last = ts;
+    render(ease(elapsed / T));
+    if (elapsed >= T) { finish(); return; }   // 到站即停，不再排下一帧
+    raf = requestAnimationFrame(loop);
+  }
+
+  function play() {
+    if (playing) return;
+    playing = true; last = 0;
+    state.textContent = '配送中';
+    btn.textContent = '⏸ 暂停';
+    raf = requestAnimationFrame(loop);
+  }
+
+  function pause() {
+    if (!playing) return;
+    playing = false;
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    last = 0;
+    state.textContent = '已暂停';
+    btn.textContent = '▶ 继续';
+  }
+
+  function finish() {
+    playing = false;
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    last = 0; finished = true; elapsed = T;
+    done.classList.add('on');
+    bag.classList.add('on');
+    state.textContent = '已送达';
+    btn.textContent = '↻ 重播';
+  }
+
+  function reset() {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    playing = false; finished = false; elapsed = 0; last = 0;
+    done.classList.remove('on');
+    bag.classList.remove('on');
+    render(0);
+    state.textContent = '待出发';
+    btn.textContent = '▶ 开始配送';
+  }
+
+  function toggle() {
+    if (finished) { reset(); play(); }
+    else if (playing) { pause(); }
+    else { play(); }
+  }
+
+  btn.addEventListener('click', toggle);
+  document.addEventListener('keydown', function (e) {
+    if (e.code === 'Space') { e.preventDefault(); if (!finished || playing) toggle(); }
+    else if (e.key === 'r' || e.key === 'R') { reset(); play(); }
+  });
+
+  render(0);
+  play();   // 首次播放一次（之后只由用户手动重播）
+})();
+</script>
+</body>
+</html>
