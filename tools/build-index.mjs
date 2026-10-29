@@ -360,6 +360,23 @@ function main() {
 
   writeFileSync(outFile, body, 'utf8');
 
+  /* 为每个项目生成 /<项目>/index.html 详情页 */
+  const templateFile = join(root, 'tools', 'project-template.html');
+  if (existsSync(templateFile)) {
+    const template = readFileSync(templateFile, 'utf8');
+    const pages = [];
+    data.projects.forEach((project) => {
+      const projectDir = join(root, project.id);
+      if (!existsSync(projectDir)) return;
+      const html = template
+        .replace(/\{\{PROJECT_ID\}\}/g, project.id)
+        .replace(/\{\{PROJECT_TITLE\}\}/g, project.title || project.id);
+      writeFileSync(join(projectDir, 'index.html'), html, 'utf8');
+      pages.push(project.id + '/');
+    });
+    console.log('已生成详情页：' + pages.join('、'));
+  }
+
   const totalRuns = data.projects.reduce((sum, project) => sum + project.runs.length, 0);
   console.log('已写入 ' + outFile);
   console.log('项目 ' + data.projects.length + ' 个 / 实测 ' + totalRuns + ' 次');

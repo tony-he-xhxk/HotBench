@@ -12,6 +12,7 @@
 
 ```
 <benchmark>/
+├── index.html                         详情页（脚本生成，访问 /<benchmark>/）
 ├── <benchmark>.prompt.txt             原始 prompt
 ├── <benchmark>.meta.json              段位、机会次数、指示灯颜色（可选）
 ├── <benchmark>.reviews.json           每个 Model × Harness 的短评（可选）
@@ -25,7 +26,8 @@
    data/projects.js   { site, labels, projects[].runs[] }
         │  assets/js/main.js       按 Model × Harness 聚合、懒加载、放大
         ▼
-   index.html   段位徽章 + 条目短评 + 实时预览/截图卡片 + 点开大图
+   首页 index.html        每个赛题 2 个条目 +「查看更多 →」
+   <benchmark>/index.html 该赛题全部条目 + 规则 + 得分汇总 + 条目搜索
 ```
 
 各文件分工：
@@ -38,6 +40,7 @@
 | `data/projects.js` | 数据文件，由脚本生成（可手工微调） |
 | `tools/build-index.mjs` | 扫描目录生成数据文件 |
 | `tools/snapshot.mjs` | 给实测 HTML 拍初始界面截图，供截图型卡片使用 |
+| `tools/project-template.html` | 详情页模板，生成 `<项目>/index.html` |
 | `CNAME` | GitHub Pages 自定义域名 |
 
 几处实现细节：
@@ -58,6 +61,8 @@
   WebP q85 的体积通常只有 PNG 的 10% 左右，肉眼几乎无差别，能明显加快图片加载。
 - **条目 = Model × Harness**：每个组合一个条目，标题形如 `DeepSeek-V4.1-Flash × WorkBuddy`；
   条目里并排放该组合的前 1~2 次效果（宽度够时一行显示），下方是这个组合的一句短评。
+- **首页与详情页**：首页每个赛题只展示 2 个条目，点「查看更多 →」进入 `/<项目英文名>/`；
+  详情页展示全部条目，并带该赛题的规则、得分汇总和「模型 / Harness」模糊搜索。
 - **段位**：`<项目名>.meta.json` 的 `tier` / `chances` 决定项目卡上的段位徽章（青铜 / 白银 / 金牌）
   和「只有 N 次机会」；超出 `chances` 的实测在生成数据时就被过滤掉，不会出现在页面上。
 - **指示灯**：每个效果只显示一颗彩色圆点，颜色来自 `meta.json` 的 `lights`。

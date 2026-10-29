@@ -8,6 +8,8 @@
   'use strict';
 
   var DATA = window.HOTBENCH_DATA || {};
+  /* 首页 body 没有 data-project；详情页（/<项目>/index.html）有 */
+  var PAGE_PROJECT = document.body.getAttribute('data-project') || '';
   /* 预览用的固定视口（与 style.css 里 .shot 的 1280 / 1000 对应），再等比缩放到卡片大小 */
   var FRAME_W = 1280;
   var FRAME_H = 1000;
@@ -114,21 +116,23 @@
     return !!run && (run.tone === 'green' || run.tone === 'yellow');
   }
 
+  /* 单个条目得分：第 N 轮才做对 → (剩余机会 + 1) 分：青铜 1、白银 2/1、黄金 3/2/1 */
+  function entryScore(entry, chances) {
+    var byAttempt = {};
+    entry.runs.forEach(function (run) { byAttempt[run.attempt] = run; });
+
+    for (var attempt = 1; attempt <= chances; attempt += 1) {
+      if (isCorrect(byAttempt[attempt])) return chances - attempt + 1;
+    }
+    return 0;
+  }
+
   function scoreOf(project, entries) {
     var chances = Number(project.chances) || 0;
     var total = 0;
 
     entries.forEach(function (entry) {
-      var byAttempt = {};
-      entry.runs.forEach(function (run) { byAttempt[run.attempt] = run; });
-
-      /* 第 N 轮才做对 → 得 (剩余机会 + 1) 分：青铜 1 分、白银 2/1、黄金 3/2/1 */
-      for (var attempt = 1; attempt <= chances; attempt += 1) {
-        if (isCorrect(byAttempt[attempt])) {
-          total += chances - attempt + 1;
-          break;
-        }
-      }
+      total += entryScore(entry, chances);
     });
 
     var max = chances * entries.length;
@@ -198,7 +202,13 @@
     var html = '';
 
     entries.forEach(function (entry) {
-      html += '<section class="entry" data-key="' + escapeHtml(entry.key) + '">' +
+      var searchText = normalizeName([
+        entry.model, entry.harness,
+        modelLabel(entry.model), harnessLabel(entry.harness),
+        entry.title
+      ].join(' '));
+      html += '<section class="entry" data-key="' + escapeHtml(entry.key) +
+        '" data-search="' + escapeHtml(searchText) + '">' +
         '<h3 class="entry-title">' + escapeHtml(entry.title) + '</h3>' +
         '<div class="previews" data-count="' + entry.runs.length + '">' +
           entry.runs.map(function (run) { return previewCard(entry, run); }).join('') +
@@ -222,7 +232,66 @@
     };
   }
 
-  function buildProject(project) {
+  function rulesText(project) {
+    var tier = String(project.tier || '').toLowerCase();
+    var chances = Number(project.chances) || 0;
+    if (tier === 'bronze') {
+      return '青铜题：只有 1 次机会，一轮做对得 1 分（绿灯或黄灯都算对），否则 0 分。';
+    }
+    if (tier === 'silver') {
+      return '白银题：只有 2 次机会，第 1 轮做对得 2 分、第 2 轮才做对得 1 分、两轮都没做对得 0 分。';
+    }
+    if (tier === 'gold') {
+      return '黄金题：只有 3 次机会，第 1 / 2 / 3 轮做对分别得 3 / 2 / 1 分，三轮都没做对得 0 分；' +
+        '只有在前两题（青铜、白银）都一轮通过的选手才能进入；连续两轮异常，第三轮视为放弃参赛。';
+    }
+    return chances ? '每个条目最多 ' + chances + ' 次机会。' : '';
+  }
+
+  function scoreSummaryHtml(project, entries) {
+    var chances = Number(project.chances) || 0;
+    var groups = {};
+
+    entries.forEach(function (entry) {
+      var score = entryScore(entry, chances);
+      if (!groups[score]) groups[score] = [];
+      groups[score].push(entry.title);
+    });
+
+    var lines = '';
+    for (var score = chances; score >= 0; score -= 1) {
+      var prefix = score === chances ? '斩获' : (score === 0 ? '喜提' : '获得');
+      lines += '<p class="summary-line"><strong>' + prefix + score + '分</strong>的有：' +
+        escapeHtml((groups[score] || []).join('；')) + '</p>';
+    }
+
+    return '<section class="score-summary">' +
+      '<p class="score-summary-title">得分汇总（仅代表此次尝试，不代表真实能力）：</p>' +
+      lines +
+    '</section>';
+  }
+
+  /* 详情页：按模型名 / Harness 名模糊过滤已渲染的条目 */
+  function bindEntrySearch(node) {
+    var input = node.querySelector('#entry-search');
+    if (!input) return;
+
+    input.addEventListener('input', function () {
+      var query = normalizeName(input.value);
+      var shown = 0;
+
+      Array.prototype.forEach.call(node.querySelectorAll('.entry'), function (section) {
+        var ok = !query || (section.getAttribute('data-search') || '').indexOf(query) !== -1;
+        section.hidden = !ok;
+        if (ok) shown += 1;
+      });
+
+      var empty = node.querySelector('.entry-empty');
+      if (empty) empty.hidden = shown !== 0;
+    });
+  }
+
+  function buildProject(project, mode) {
     var runs = project.runs || [];
     var models = unique(runs.map(function (run) { return run.model; }));
     var harnesses = unique(runs.map(function (run) { return run.harness; }));
@@ -249,6 +318,8 @@
       : '';
 
     var entries = entriesOf(project);
+    var detail = mode === 'detail';
+    var shownEntries = detail ? entries : entries.slice(0, 2);
     var score = scoreOf(project, entries);
     var scoreBox = Number(project.chances)
       ? '<div class="score-box">' +
@@ -257,6 +328,9 @@
           '<span class="score-detail">' + score.total + ' / ' + score.max + ' 分</span>' +
         '</div>'
       : '';
+
+    var bottom = detail ? '' : '<div class="more-row">' +
+      '<a class="more-link" href="' + encodeURIComponent(project.id) + '/">查看更多 →</a></div>';
 
     var node = document.createElement('article');
     node.className = 'project';
@@ -276,9 +350,18 @@
         scoreBox +
       '</div>' +
       promptBox +
-      '<div class="entries"></div>';
+      (detail ? '<p class="project-rules">' + escapeHtml(rulesText(project)) + '</p>' +
+        scoreSummaryHtml(project, entries) +
+        '<div class="detail-toolbar"><span>搜索条目</span>' +
+          '<label class="entry-search"><input id="entry-search" type="search" autocomplete="off" ' +
+            'placeholder="模型 / Harness（模糊匹配）"></label>' +
+        '</div>' +
+        '<p class="entry-empty" hidden>没有匹配的条目。</p>' : '') +
+      '<div class="entries"></div>' +
+      bottom;
 
-    renderEntries(node.querySelector('.entries'), entries);
+    renderEntries(node.querySelector('.entries'), shownEntries);
+    if (detail) bindEntrySearch(node);
     refreshProject(node, project);
 
     return node;
@@ -585,6 +668,23 @@
     el.projects.innerHTML = '';
     projectNodes = [];
 
+    /* 详情页：只渲染当前项目，且展示全部条目 */
+    if (PAGE_PROJECT) {
+      var current = null;
+      projects.forEach(function (project) {
+        if (project.id === PAGE_PROJECT) current = project;
+      });
+      if (!current) {
+        el.projects.innerHTML = '<p class="empty-tip">找不到这个 benchmark。</p>';
+        return;
+      }
+      document.title = (current.title || current.id) + ' · HotBench';
+      var detailNode = buildProject(current, 'detail');
+      el.projects.appendChild(detailNode);
+      loadFrames(detailNode);
+      return;
+    }
+
     if (!projects.length) {
       el.projects.innerHTML = '<p class="empty-tip">还没有 benchmark 数据，' +
         '在 <code>data/projects.js</code> 里添加即可。</p>';
@@ -595,7 +695,7 @@
     }
 
     projects.forEach(function (project) {
-      var node = buildProject(project);
+      var node = buildProject(project, 'summary');
       el.projects.appendChild(node);
       projectNodes.push({ project: project, node: node });
       /* 必须挂到页面上再测量：脱开的节点宽度为 0，iframe 会按默认尺寸加载 */
