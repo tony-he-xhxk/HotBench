@@ -340,6 +340,50 @@ function scan() {
 
 /* ---------- 输出 ---------- */
 
+/* 灯色约束：绿灯代表「这一轮过了，不再测下一轮」。
+   因此同一条目里，绿灯只能出现在最后一次尝试；出现「绿灯后还有下一轮」或「多轮绿灯」都视为配置错误。 */
+function validateLights(data) {
+  const issues = [];
+
+  data.projects.forEach((project) => {
+    const chances = Number(project.chances) || 0;
+    const groups = new Map();
+
+    project.runs.forEach((run) => {
+      const key = run.model + '.' + run.harness;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(run);
+    });
+
+    groups.forEach((runs, key) => {
+      const maxAttempt = Math.max.apply(null, runs.map((run) => run.attempt));
+      const greens = runs.filter((run) => run.tone === 'green');
+
+      if (greens.length > 1) {
+        issues.push(project.id + ' / ' + key + '：有 ' + greens.length +
+          ' 轮绿灯（只可能最后一轮是绿灯）');
+      }
+      greens.forEach((run) => {
+        if (run.attempt !== maxAttempt) {
+          issues.push(project.id + ' / ' + key + '：第 ' + run.attempt +
+            ' 轮是绿灯，但后面还有第 ' + maxAttempt + ' 轮（绿灯后不应继续测试）');
+        }
+      });
+
+      if (chances) {
+        runs.forEach((run) => {
+          if (run.attempt > chances) {
+            issues.push(project.id + ' / ' + key + '：第 ' + run.attempt +
+              ' 轮超过机会次数 ' + chances);
+          }
+        });
+      }
+    });
+  });
+
+  return issues;
+}
+
 function main() {
   if (!existsSync(root)) {
     console.error('找不到仓库目录：' + root);
@@ -347,6 +391,15 @@ function main() {
   }
 
   const data = scan();
+
+  const lightIssues = validateLights(data);
+  if (lightIssues.length) {
+    console.error('灯色约束检查失败：');
+    lightIssues.forEach((message) => console.error('  ! ' + message));
+    console.error('（绿灯必须是该条目最后一次尝试；达到机会次数后也不会再有下一轮）');
+    process.exit(1);
+  }
+
   const dataDir = dirname(outFile);
   if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
 

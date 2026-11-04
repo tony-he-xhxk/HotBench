@@ -19,7 +19,8 @@ window.HOTBENCH_DATA = {
       "step-5-preview": "Step-5-Preview",
       "mimo-v2.6-pro": "MiMo-V2.6-Pro",
       "DeepSeek-V4.1-Flash-1017": "DeepSeek-V4.1-Flash-1017",
-      "MiniMax-M3.1-Flash": "MiniMax-M3.1-Flash"
+      "MiniMax-M3.1-Flash": "MiniMax-M3.1-Flash",
+      "Hy4": "Hy4"
     },
     "harnesses": {
       "codex": "Codex",
@@ -57,13 +58,15 @@ window.HOTBENCH_DATA = {
         "DeepSeek-V4.1-Flash-1017.workbuddy",
         "DeepSeek-V4.1-Flash-1017.trae-cn",
         "DeepSeek-V4.1-Flash-1017.deepseek-harness",
-        "MiniMax-M3.1-Flash.workbuddy"
+        "MiniMax-M3.1-Flash.workbuddy",
+        "Hy4.workbuddy"
       ],
       "reviews": {
         "deepseek-v41-flash.codex": "一轮通过。蛇是一格一格跳的复古手感，但蛇身连贯、画面干净。",
         "deepseek-v41-flash.workbuddy": "蛇的每节之间间隙较大，实测有可感知的延迟。",
         "glm-5.3-flash.workbuddy": "逻辑基本正确，但只能用上/下键开始，左/右键无效；移动端页面还显示不全。",
         "hy4-preview.workbuddy": "逻辑正确，没有延迟，有一个小瑕疵：蛇的两个眼睛竟然是一前一后的。",
+        "Hy4.workbuddy": "一轮通过，逻辑正确，没有明显问题。",
         "space-bunny.workbuddy": "一轮通过、没有延迟，交付速度也是最快的；但蛇没有眼睛，蛇身用格子染色，UI 明显偷懒。",
         "step-5-preview.workbuddy": "逻辑正确、没有延迟，但一进页面就零帧起手、蛇直接撞墙；吃豆加速 5 次后快到无法微操，体验极差。移动端显示不全。",
         "mimo-v2.6-pro.workbuddy": "逻辑正确，但蛇头没画眼睛，整体观感和 Space-Bunny 很接近。",
@@ -139,6 +142,15 @@ window.HOTBENCH_DATA = {
           "tone": "red"
         },
         {
+          "id": "Hy4.workbuddy.1",
+          "model": "Hy4",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "snake/snake.Hy4.workbuddy.1/snake.Hy4.workbuddy.1.html",
+          "shot": "snake/snake.Hy4.workbuddy.1/snake.Hy4.workbuddy.1.webp",
+          "tone": "green"
+        },
+        {
           "id": "hy4-preview.workbuddy.1",
           "model": "hy4-preview",
           "harness": "workbuddy",
@@ -198,11 +210,12 @@ window.HOTBENCH_DATA = {
       "reviews": {
         "deepseek-v41-flash.codex": "第 1 轮就画得很完整，只是多了一只碍眼的骑行水壶；第 2 轮修掉后两轮内过关。",
         "deepseek-v41-flash.workbuddy": "第 1 轮鹈鹕的腿直接飞出去了，第 2 轮完全修好，纠错速度不错。",
-        "glm-5.3-flash.workbuddy": "第 1 轮踏板直接飞出、脚在左右摆荡，根本没在转；第 2 轮修好，两轮内过关。",
-        "hy4-preview.workbuddy": "第 1 轮运动逻辑和空间位置都正确，鹈鹕画的略微丑。",
+        "glm-5.3-flash.workbuddy": "第 1 轮踏板直接飞出、脚在左右摆荡，根本没在转；第 2 轮修好了踏板和脚，但是远端腿与车架的遮挡关系不对，不通过。",
+        "hy4-preview.workbuddy": "第 1 轮完全崩坏，头、尾翼全飞到左上角，膝盖向后弯，还多了个碍眼的骑行水壶；第 2 轮修复完毕，但是真的感觉超级丑。",
+        "Hy4.workbuddy": "第 1 轮翅膀太短，只用脚骑车不现实，远侧腿在某时刻会因为长度而伸直，不符合逻辑，马路虚线移动方向错误，远端腿与车架遮挡关系不对；第 2 轮修复完毕。",
         "space-bunny.workbuddy": "两次机会内没修好：第 1 轮背景（山、树、路虚线）会跳变，第 2 轮路肩又跳变。",
         "step-5-preview.workbuddy": "两次机会都没过：第 1 轮腿像纸片一样翻转，第 2 轮画蛇添足把两条腿连成了橙色三角形。",
-        "mimo-v2.6-pro.workbuddy": "第 1 轮腿在摆动，没有随踏板一起移动；第 2 轮代表脚的那个椭圆放得太靠上，小腿在脚之下还多出一截。",
+        "mimo-v2.6-pro.workbuddy": "第 1 轮腿在摆动，没有随踏板一起移动；第 2 轮代表脚的那个椭圆放得太靠上，小腿在脚之下还多出一截，而且远端腿与车架的遮挡关系不对，仍然不通过。",
         "DeepSeek-V4.1-Flash-1017.codex": "第 1 轮就做出了空间位置和运动逻辑正确的作品，唯一不足的是鹈鹕是白眼，勉强过关。",
         "DeepSeek-V4.1-Flash-1017.workbuddy": "第 1 轮运动逻辑和空间位置都正确，不足的是踏板旋转速度过慢，看起来像老年人中的老年人骑自行车，勉强过关。",
         "DeepSeek-V4.1-Flash-1017.trae-cn": "第 1 轮运动逻辑和空间位置都正确，甚至还细心的做了气门芯，非常不错，一轮过关。",
@@ -297,6 +310,22 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 2,
           "file": "pelican-bicycle/pelican-bicycle.glm-5.3-flash.workbuddy.2/pelican-bicycle.glm-5.3-flash.workbuddy.2.html",
+          "tone": "red"
+        },
+        {
+          "id": "Hy4.workbuddy.1",
+          "model": "Hy4",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "pelican-bicycle/pelican-bicycle.Hy4.workbuddy.1/pelican-bicycle.Hy4.workbuddy.1.html",
+          "tone": "red"
+        },
+        {
+          "id": "Hy4.workbuddy.2",
+          "model": "Hy4",
+          "harness": "workbuddy",
+          "attempt": 2,
+          "file": "pelican-bicycle/pelican-bicycle.Hy4.workbuddy.2/pelican-bicycle.Hy4.workbuddy.2.html",
           "tone": "green"
         },
         {
@@ -305,6 +334,14 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 1,
           "file": "pelican-bicycle/pelican-bicycle.hy4-preview.workbuddy.1/pelican-bicycle.hy4-preview.workbuddy.1.html",
+          "tone": "red"
+        },
+        {
+          "id": "hy4-preview.workbuddy.2",
+          "model": "hy4-preview",
+          "harness": "workbuddy",
+          "attempt": 2,
+          "file": "pelican-bicycle/pelican-bicycle.hy4-preview.workbuddy.2/pelican-bicycle.hy4-preview.workbuddy.2.html",
           "tone": "green"
         },
         {

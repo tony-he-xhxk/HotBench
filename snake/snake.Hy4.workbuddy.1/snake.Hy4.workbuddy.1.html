@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>贪吃蛇</title>
+<style>
+  :root{
+    --mint:#2bb3a6;
+    --mint-dark:#1c8f84;
+    --ink:#203331;
+    --muted:#7b938f;
+    --bg:#eaf4f2;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:radial-gradient(circle at 50% 0%, #f4fbf9 0%, var(--bg) 70%);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{width:100%;max-width:440px;}
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin:0 2px 14px;
+  }
+  h1{
+    font-size:22px;
+    font-weight:650;
+    letter-spacing:2px;
+    margin:0;
+  }
+  h1::before{
+    content:"";
+    display:inline-block;
+    width:9px;height:9px;
+    border-radius:3px;
+    background:var(--mint);
+    margin-right:9px;
+    vertical-align:2px;
+  }
+  .stats{display:flex;gap:16px;font-size:13px;color:var(--muted);}
+  .stats b{
+    color:var(--ink);
+    font-size:16px;
+    font-variant-numeric:tabular-nums;
+    margin-left:4px;
+  }
+  .board{
+    position:relative;
+    background:var(--card);
+    padding:8px;
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(31,110,101,.12), 0 1px 3px rgba(31,110,101,.08);
+  }
+  canvas{
+    display:block;
+    width:100%;
+    aspect-ratio:1 / 1;
+    border-radius:11px;
+    touch-action:none;
+    cursor:pointer;
+  }
+  .overlay{
+    position:absolute;
+    inset:8px;
+    border-radius:11px;
+    background:rgba(247,253,251,.82);
+    backdrop-filter:blur(3px);
+    -webkit-backdrop-filter:blur(3px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    text-align:center;
+    pointer-events:none;
+    transition:opacity .18s ease;
+  }
+  .overlay.hidden{opacity:0;}
+  .ov-title{font-size:21px;font-weight:650;letter-spacing:1px;}
+  .ov-sub{font-size:13px;color:var(--muted);padding:0 16px;line-height:1.6;}
+  footer{
+    margin:14px 2px 0;
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.8;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>贪吃蛇</h1>
+      <div class="stats">
+        <span>得分<b id="score">0</b></span>
+        <span>最高<b id="best">0</b></span>
+      </div>
+    </header>
+
+    <div class="board">
+      <canvas id="game"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="ov-title" id="ovTitle">准备好了？</div>
+        <div class="ov-sub" id="ovSub">按 空格 或 方向键 开始</div>
+      </div>
+    </div>
+
+    <footer>方向键 / WASD 移动 · 空格 暂停 · R 重开<br>触屏可在棋盘上滑动</footer>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  var COLS = 20, ROWS = 20, SIZE = 440, CELL = SIZE / COLS;
+  var BASE_TICK = 150, MIN_TICK = 70;
+
+  var canvas = document.getElementById("game");
+  var ctx = canvas.getContext("2d");
+  var scoreEl = document.getElementById("score");
+  var bestEl = document.getElementById("best");
+  var overlay = document.getElementById("overlay");
+  var ovTitle = document.getElementById("ovTitle");
+  var ovSub = document.getElementById("ovSub");
+
+  var snake, dir, queue, food, score, best, state, tickMs, acc, last;
+
+  try { best = parseInt(localStorage.getItem("snake-best") || "0", 10) || 0; }
+  catch (e) { best = 0; }
+  function saveBest(){
+    try { localStorage.setItem("snake-best", String(best)); } catch (e) {}
+  }
+
+  function fitCanvas(){
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(SIZE * dpr);
+    canvas.height = Math.round(SIZE * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function updateScore(){
+    scoreEl.textContent = score;
+    bestEl.textContent = best;
+  }
+
+  function setOverlay(){
+    var text = {
+      ready:  ["准备好了？", "按 空格 或 方向键 开始"],
+      paused: ["已暂停", "按 空格 继续"],
+      over:   ["游戏结束", "本局 " + score + " 分 · 按 空格 再来一局"],
+      win:    ["通关！", "整个棋盘都被你吃满了 · 按 空格 重开"]
+    };
+    if (state === "playing"){ overlay.classList.add("hidden"); return; }
+    overlay.classList.remove("hidden");
+    ovTitle.textContent = text[state][0];
+    ovSub.textContent = text[state][1];
+  }
+
+  function start(){
+    if (state === "ready" || state === "paused"){
+      state = "playing";
+      acc = 0;
+      setOverlay();
+    }
+  }
+
+  function reset(autoStart){
+    snake = [{x:9,y:10},{x:8,y:10},{x:7,y:10}];
+    dir = {x:1,y:0};
+    queue = [];
+    score = 0;
+    acc = 0;
+    tickMs = BASE_TICK;
+    state = autoStart ? "playing" : "ready";
+    spawnFood();
+    updateScore();
+    setOverlay();
+  }
+
+  function spawnFood(){
+    var free = [];
+    for (var y = 0; y < ROWS; y++){
+      for (var x = 0; x < COLS; x++){
+        var occupied = false;
+        for (var i = 0; i < snake.length; i++){
+          if (snake[i].x === x && snake[i].y === y){ occupied = true; break; }
+        }
+        if (!occupied) free.push({x:x, y:y});
+      }
+    }
+    if (!free.length){ finish("win"); return; }
+    food = free[Math.floor(Math.random() * free.length)];
+  }
+
+  function turn(next){
+    if (state === "over" || state === "win") return;
+    if (state === "paused") return;
+    if (state === "ready") start();
+    var ref = queue.length ? queue[queue.length - 1] : dir;
+    if (next.x === -ref.x && next.y === -ref.y) return;
+    if (next.x === ref.x && next.y === ref.y) return;
+    if (queue.length < 2) queue.push(next);
+  }
+
+  function finish(result){
+    state = result;
+    if (score > best){ best = score; saveBest(); }
+    updateScore();
+    setOverlay();
+  }
+
+  function step(){
+    if (queue.length) dir = queue.shift();
+    var head = {x:snake[0].x + dir.x, y:snake[0].y + dir.y};
+
+    if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) return finish("over");
+
+    var grow = food && head.x === food.x && head.y === food.y;
+    var body = grow ? snake : snake.slice(0, -1);
+    for (var i = 0; i < body.length; i++){
+      if (body[i].x === head.x && body[i].y === head.y) return finish("over");
+    }
+
+    snake.unshift(head);
+    if (grow){
+      score++;
+      tickMs = Math.max(MIN_TICK, BASE_TICK - Math.floor(score / 3) * 8);
+      updateScore();
+      spawnFood();
+    } else {
+      snake.pop();
+    }
+  }
+
+  function roundRect(x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    ctx.fillStyle = "#f3faf8";
+    ctx.fillRect(0, 0, SIZE, SIZE);
+    ctx.fillStyle = "#ebf6f3";
+    for (var y = 0; y < ROWS; y++){
+      for (var x = 0; x < COLS; x++){
+        if ((x + y) % 2 === 0) ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+      }
+    }
+
+    if (food){
+      var fx = food.x * CELL + CELL / 2;
+      var fy = food.y * CELL + CELL / 2;
+      ctx.fillStyle = "#ff6b6b";
+      ctx.beginPath();
+      ctx.arc(fx, fy, CELL * 0.33, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.65)";
+      ctx.beginPath();
+      ctx.arc(fx - CELL * 0.11, fy - CELL * 0.12, CELL * 0.07, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    var pad = 1.4;
+    for (var i = snake.length - 1; i >= 0; i--){
+      var s = snake[i];
+      var t = snake.length > 1 ? i / (snake.length - 1) : 0;
+      ctx.fillStyle = i === 0 ? "#16786f" : "hsl(174, 62%, " + (43 + t * 16).toFixed(1) + "%)";
+      roundRect(s.x * CELL + pad, s.y * CELL + pad, CELL - pad * 2, CELL - pad * 2, 5);
+    }
+
+    var h = snake[0];
+    var cx = h.x * CELL + CELL / 2;
+    var cy = h.y * CELL + CELL / 2;
+    var off = CELL * 0.19, fwd = CELL * 0.14, r = CELL * 0.065;
+    var e1, e2;
+    if (dir.x !== 0){
+      e1 = [cx + dir.x * fwd, cy - off];
+      e2 = [cx + dir.x * fwd, cy + off];
+    } else {
+      e1 = [cx - off, cy + dir.y * fwd];
+      e2 = [cx + off, cy + dir.y * fwd];
+    }
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath(); ctx.arc(e1[0], e1[1], r, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(e2[0], e2[1], r, 0, Math.PI * 2); ctx.fill();
+  }
+
+  function loop(t){
+    if (!last) last = t;
+    var dt = Math.min(t - last, 100);
+    last = t;
+    if (state === "playing"){
+      acc += dt;
+      while (acc >= tickMs){
+        acc -= tickMs;
+        step();
+        if (state !== "playing") break;
+      }
+    }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  var keys = {
+    arrowup:{x:0,y:-1}, w:{x:0,y:-1},
+    arrowdown:{x:0,y:1},  s:{x:0,y:1},
+    arrowleft:{x:-1,y:0}, a:{x:-1,y:0},
+    arrowright:{x:1,y:0}, d:{x:1,y:0}
+  };
+
+  window.addEventListener("keydown", function(e){
+    var k = e.key.toLowerCase();
+    if (keys[k]){
+      e.preventDefault();
+      if (state === "over" || state === "win") reset(false);
+      turn(keys[k]);
+      return;
+    }
+    if (k === " " || k === "spacebar"){
+      e.preventDefault();
+      if (state === "ready") start();
+      else if (state === "playing"){ state = "paused"; setOverlay(); }
+      else if (state === "paused") start();
+      else reset(true);
+      return;
+    }
+    if (k === "r"){ e.preventDefault(); reset(true); }
+  }, {passive:false});
+
+  var startPt = null;
+  canvas.addEventListener("pointerdown", function(e){
+    startPt = {x:e.clientX, y:e.clientY};
+  });
+  canvas.addEventListener("pointerup", function(e){
+    if (!startPt) return;
+    var dx = e.clientX - startPt.x;
+    var dy = e.clientY - startPt.y;
+    startPt = null;
+    if (Math.sqrt(dx * dx + dy * dy) < 16){
+      if (state === "ready") start();
+      else if (state === "over" || state === "win") reset(true);
+      return;
+    }
+    turn(Math.abs(dx) > Math.abs(dy)
+      ? {x:dx > 0 ? 1 : -1, y:0}
+      : {x:0, y:dy > 0 ? 1 : -1});
+  });
+  canvas.addEventListener("pointercancel", function(){ startPt = null; });
+  window.addEventListener("resize", fitCanvas);
+
+  fitCanvas();
+  reset(false);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

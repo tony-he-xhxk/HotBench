@@ -14,7 +14,8 @@
     "DeepSeek-V4.1-Flash-1017.workbuddy",
     "DeepSeek-V4.1-Flash-1017.trae-cn",
     "DeepSeek-V4.1-Flash-1017.deepseek-harness",
-    "MiniMax-M3.1-Flash.workbuddy"
+    "MiniMax-M3.1-Flash.workbuddy",
+    "Hy4.workbuddy"
   ],
   "lights": {
     "deepseek-v41-flash.codex.1": "green",
@@ -28,6 +29,7 @@
     "MiniMax-M3.1-Flash.workbuddy.1": "green",
     "DeepSeek-V4.1-Flash-1017.workbuddy.1": "green",
     "DeepSeek-V4.1-Flash-1017.trae-cn.1": "green",
-    "DeepSeek-V4.1-Flash-1017.deepseek-harness.1": "green"
+    "DeepSeek-V4.1-Flash-1017.deepseek-harness.1": "green",
+    "Hy4.workbuddy.1": "green"
   }
 }
