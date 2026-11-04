@@ -384,6 +384,61 @@ function validateLights(data) {
   return issues;
 }
 
+/* 计算某个条目在某个赛题里的得分（与前端规则一致：第 N 轮才做对得 剩余机会+1 分，绿/黄都算对） */
+function entryScore(runs, chances) {
+  const byAttempt = {};
+  runs.forEach((run) => { byAttempt[run.attempt] = run; });
+  const correct = (run) => !!run && (run.tone === 'green' || run.tone === 'yellow');
+
+  for (let attempt = 1; attempt <= chances; attempt += 1) {
+    if (correct(byAttempt[attempt])) return chances - attempt + 1;
+  }
+  return 0;
+}
+
+/* 黄金题准入：该「模型 × Harness」必须在青铜、白银都拿满分（青铜 1/1，白银 2/2） */
+function validateGoldEligibility(data) {
+  const issues = [];
+  const byTier = {};
+
+  data.projects.forEach((project) => {
+    const tier = String(project.tier || '').toLowerCase();
+    if (tier && !byTier[tier]) byTier[tier] = project;
+  });
+
+  data.projects
+    .filter((project) => String(project.tier || '').toLowerCase() === 'gold')
+    .forEach((gold) => {
+      const keys = new Set(gold.runs.map((run) => run.model + '.' + run.harness));
+
+      keys.forEach((key) => {
+        ['bronze', 'silver'].forEach((tierName) => {
+          const tierProject = byTier[tierName];
+          if (!tierProject) {
+            issues.push(gold.id + ' / ' + key + '：缺少 ' + tierName + ' 赛题，无法验证黄金题资格');
+            return;
+          }
+
+          const entryRuns = tierProject.runs.filter((run) => run.model + '.' + run.harness === key);
+          if (!entryRuns.length) {
+            issues.push(gold.id + ' / ' + key + '：未参加 ' + tierProject.id +
+              '（' + tierName + '），不具备黄金题资格');
+            return;
+          }
+
+          const chances = Number(tierProject.chances) || 0;
+          const score = entryScore(entryRuns, chances);
+          if (score < chances) {
+            issues.push(gold.id + ' / ' + key + '：' + tierProject.id + '（' + tierName +
+              '）仅得 ' + score + '/' + chances + ' 分，未满分，不具备黄金题资格');
+          }
+        });
+      });
+    });
+
+  return issues;
+}
+
 function main() {
   if (!existsSync(root)) {
     console.error('找不到仓库目录：' + root);
@@ -397,6 +452,14 @@ function main() {
     console.error('灯色约束检查失败：');
     lightIssues.forEach((message) => console.error('  ! ' + message));
     console.error('（绿灯必须是该条目最后一次尝试；达到机会次数后也不会再有下一轮）');
+    process.exit(1);
+  }
+
+  const goldIssues = validateGoldEligibility(data);
+  if (goldIssues.length) {
+    console.error('黄金题资格检查失败：');
+    goldIssues.forEach((message) => console.error('  ! ' + message));
+    console.error('（只有青铜、白银都满分的「模型 × Harness」才能参加黄金题）');
     process.exit(1);
   }
 
