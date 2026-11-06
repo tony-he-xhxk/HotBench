@@ -22,6 +22,9 @@
     gold: { label: '黄金', className: 'tier-gold' }
   };
 
+  /* 文字赛题的完整 prompt 由说明与全部题目合并而成，点击后在大弹窗中阅读。 */
+  var textPrompts = {};
+
   var el = {
     projects: document.getElementById('projects'),
     heroNote: document.getElementById('hero-note'),
@@ -466,10 +469,12 @@
 
     var promptBox = '';
     if (project.prompt) {
-      promptBox = '<details class="prompt-box">' +
-        '<summary>查看原始 prompt</summary>' +
-        '<p class="prompt-text">' + escapeHtml(project.prompt) + '</p>' +
-      '</details>';
+      textPrompts[project.id] = {
+        title: (project.title || project.id) + ' · 完整 prompt',
+        text: project.prompt
+      };
+      promptBox = '<button class="prompt-long" type="button" data-prompt-project="' +
+        escapeHtml(project.id) + '">由于原始 prompt 太长，请点击此处查看完整内容</button>';
     }
 
     var scoreBox = '<div class="score-box">' +
@@ -801,12 +806,12 @@
   }
 
   /* 异常文本：放大后显示完整内容，不提供「在新标签页打开」 */
-  function openLightboxText(title, text) {
+  function openLightboxText(title, text, variant) {
     el.lbTitle.textContent = title || '';
     el.lbOpen.hidden = true;
     el.lbBody.innerHTML = '';
     var box = document.createElement('div');
-    box.className = 'dump-full';
+    box.className = variant === 'prompt' ? 'prompt-full' : 'dump-full';
     box.textContent = text || '';
     el.lbBody.appendChild(box);
     el.lightbox.hidden = false;
@@ -839,6 +844,10 @@
 
     var html = '<option value="all">全部赛题</option>';
     tiers.forEach(function (tier) {
+      if (tier === 'special') {
+        html += '<option value="special">特别赛题 · 文字理解</option>';
+        return;
+      }
       var info = TIERS[tier];
       var label = info ? info.label : tier;
       var chances = 0;
@@ -989,6 +998,13 @@
 
   /* 事件委托：点预览图放大 */
   el.projects.addEventListener('click', function (event) {
+    var promptButton = event.target.closest ? event.target.closest('[data-prompt-project]') : null;
+    if (promptButton) {
+      var prompt = textPrompts[promptButton.getAttribute('data-prompt-project')];
+      if (prompt) openLightboxText(prompt.title, prompt.text, 'prompt');
+      return;
+    }
+
     var dump = event.target.closest ? event.target.closest('.shot-abnormal') : null;
     if (dump) {
       openLightboxText(dump.getAttribute('data-title'), dump.getAttribute('data-dump'));

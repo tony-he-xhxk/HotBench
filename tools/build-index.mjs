@@ -257,14 +257,23 @@ function scan() {
           console.warn('! ' + projectId + ' 的评分必须是 0/1/2：' + invalidScores.join('；'));
         }
 
+        const instruction = promptFile
+          ? readFileSync(promptFile, 'utf8').trim()
+          : String(old.prompt || '').trim();
+        const numberedQuestions = questions
+          .map((question, index) => (index + 1) + '. ' + question)
+          .join('\n');
+        const fullPrompt = [instruction, numberedQuestions].filter(Boolean).join('\n\n');
+
         projects.push({
           id: projectId,
           title: old.title || projectId,
           summary: old.summary || '',
           type: 'text',
+          tier: 'special',
           order: Number(meta.order) || Number(old.order) || 0,
-          prompt: promptFile ? readFileSync(promptFile, 'utf8').trim() : (old.prompt || ''),
-          promptUrl: promptFile ? toUrl(promptFile) : '',
+          prompt: fullPrompt,
+          promptUrl: '',
           questions: questions,
           questionsUrl: questionsFile ? toUrl(questionsFile) : '',
           models: models,
