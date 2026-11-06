@@ -2,11 +2,6 @@
   "_说明": "scores 的键是题号（从 1 开始，与 questions 文件的行序一致），值是 { 模型id: 0|1|2 }。完整解释到位=2，仅解释部分=1，跑偏=0；未评分的题或模型可以留空。",
   "models": [
     {
-      "id": "deepseek-v41-flash",
-      "name": "DeepSeek-V4.1-Flash",
-      "harness": "workbuddy"
-    },
-    {
       "id": "DeepSeek-V4.1-Flash-1017",
       "name": "DeepSeek-V4.1-Flash-1017",
       "harness": "workbuddy"

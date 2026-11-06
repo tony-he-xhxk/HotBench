@@ -644,11 +644,6 @@ window.HOTBENCH_DATA = {
       "questionsUrl": "feihua-wenxue/feihua-wenxue.questions.txt",
       "models": [
         {
-          "id": "deepseek-v41-flash",
-          "name": "DeepSeek-V4.1-Flash",
-          "harness": "workbuddy"
-        },
-        {
           "id": "DeepSeek-V4.1-Flash-1017",
           "name": "DeepSeek-V4.1-Flash-1017",
           "harness": "workbuddy"

@@ -334,6 +334,9 @@
         max: max,
         rate: max ? (total / max) * 100 : 0
       };
+    }).filter(function (item) {
+      /* 没有任何有效评分的模型视为未参赛，不进入模型数或排行榜。 */
+      return item.answered > 0;
     }).sort(function (a, b) {
       if (!a.answered && !b.answered) return a.model.name.localeCompare(b.model.name);
       if (!a.answered) return 1;
@@ -454,14 +457,14 @@
 
   function buildTextProject(project, mode) {
     var questions = project.questions || [];
-    var models = project.models || [];
+    var participants = textTotals(project);
     var totals = completedTotals(project);
     var overall = textOverall(project);
     var detail = mode === 'detail';
 
     var chips = [
       questions.length + ' 道题',
-      models.length + ' 个模型',
+      participants.length + ' 个模型',
       'WorkBuddy'
     ].map(function (text) {
       return '<span class="chip">' + escapeHtml(text) + '</span>';

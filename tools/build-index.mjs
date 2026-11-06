@@ -240,8 +240,9 @@ function scan() {
             .filter(Boolean)
           : [];
         const results = readJson(resultsFile, 'results');
-        const models = Array.isArray(results.models) ? results.models : [];
+        const rawModels = Array.isArray(results.models) ? results.models : [];
         const scores = (results.scores && typeof results.scores === 'object') ? results.scores : {};
+        const scoredModelIds = new Set();
 
         const invalidScores = [];
         Object.keys(scores).forEach((questionId) => {
@@ -250,12 +251,17 @@ function scan() {
             const value = row[modelId];
             if (value !== null && value !== undefined && value !== 0 && value !== 1 && value !== 2) {
               invalidScores.push('第 ' + questionId + ' 题 / ' + modelId + ' = ' + value);
+            } else if (value === 0 || value === 1 || value === 2) {
+              scoredModelIds.add(modelId);
             }
           });
         });
         if (invalidScores.length) {
           console.warn('! ' + projectId + ' 的评分必须是 0/1/2：' + invalidScores.join('；'));
         }
+
+        /* 未参加、或完全没有有效评分的候选模型，不写入页面的参赛模型列表。 */
+        const models = rawModels.filter((model) => scoredModelIds.has(model.id));
 
         const instruction = promptFile
           ? readFileSync(promptFile, 'utf8').trim()
