@@ -291,7 +291,235 @@
     });
   }
 
+  /* ---------- 文字题 ---------- */
+
+  function textRules() {
+    return '每道题满分 2 分：完整解释到位得 2 分，仅解释部分得 1 分，跑偏得 0 分。' +
+      '总得分率 = 实得分 ÷（2 × 题数）× 100%。';
+  }
+
+  function modelRateClass(rate) {
+    return rate >= 90 ? 'is-high' : (rate >= 80 ? 'is-mid' : 'is-low');
+  }
+
+  function questionRateClass(rate) {
+    return rate >= 90 ? 'is-high' : (rate >= 70 ? 'is-mid' : 'is-low');
+  }
+
+  function textTotals(project) {
+    var questions = project.questions || [];
+    var scores = project.scores || {};
+    var max = questions.length * 2;
+
+    return (project.models || []).map(function (model) {
+      var total = 0;
+      var answered = 0;
+
+      questions.forEach(function (question, index) {
+        var row = scores[String(index + 1)] || {};
+        var value = row[model.id];
+        if (value === 0 || value === 1 || value === 2) {
+          total += value;
+          answered += 1;
+        }
+      });
+
+      return {
+        model: model,
+        total: total,
+        answered: answered,
+        max: max,
+        rate: max ? (total / max) * 100 : 0
+      };
+    }).sort(function (a, b) {
+      if (!a.answered && !b.answered) return a.model.name.localeCompare(b.model.name);
+      if (!a.answered) return 1;
+      if (!b.answered) return -1;
+      return b.rate - a.rate || a.model.name.localeCompare(b.model.name);
+    });
+  }
+
+  function textModelTable(totals) {
+    if (!totals.length) return '<p class="empty-tip">还没有模型成绩。</p>';
+
+    return '<div class="leaderboard">' + totals.map(function (item, index) {
+      var cls = modelRateClass(item.rate);
+      return '<div class="lb-row">' +
+        '<div class="lb-rank' + (index < 3 ? ' top' : '') + '">' + (index + 1) + '</div>' +
+        '<div class="lb-who">' +
+          '<div class="lb-name">' + escapeHtml(item.model.name) +
+            '<span class="harness-tag">× ' + escapeHtml(harnessLabel(item.model.harness)) + '</span></div>' +
+          '<div class="lb-sub">' + item.total + ' / ' + item.max + ' 分</div>' +
+        '</div>' +
+        '<div class="lb-track"><div class="lb-fill ' + cls +
+          '" style="width:' + item.rate.toFixed(1) + '%"></div></div>' +
+        '<div class="lb-rate ' + cls + '">' + formatRate(item.rate) + '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  function completedTotals(project) {
+    var questions = project.questions || [];
+    return textTotals(project).filter(function (item) {
+      return item.answered === questions.length;
+    });
+  }
+
+  /* 题目得分率：该题所有已完成模型的得分 ÷（2 × 模型数），从高到低 */
+  function questionRates(project, totals) {
+    var questions = project.questions || [];
+    var scores = project.scores || {};
+
+    return questions.map(function (text, index) {
+      var qid = index + 1;
+      var sum = totals.reduce(function (acc, item) {
+        var value = (scores[String(qid)] || {})[item.model.id];
+        return acc + (value === 0 || value === 1 || value === 2 ? value : 0);
+      }, 0);
+      return { qid: qid, text: text, rate: totals.length ? (sum / (2 * totals.length)) * 100 : 0 };
+    }).sort(function (a, b) {
+      return b.rate - a.rate || a.qid - b.qid;
+    });
+  }
+
+  function textQuestionsHtml(project) {
+    var totals = completedTotals(project);
+    if (!project.questions || !project.questions.length) return '<p class="empty-tip">还没有题目。</p>';
+    if (!totals.length) return '<p class="empty-tip">还没有题目成绩。</p>';
+
+    return '<div class="leaderboard">' + questionRates(project, totals).map(function (item, index) {
+      var cls = questionRateClass(item.rate);
+      return '<div class="lb-row qrow">' +
+        '<div class="lb-rank' + (index < 3 ? ' top' : '') + '">' + (index + 1) + '</div>' +
+        '<div class="lb-qno">#' + String(item.qid).padStart(2, '0') + '</div>' +
+        '<div class="lb-qtext" title="' + escapeHtml(item.text) + '">' + escapeHtml(item.text) + '</div>' +
+        '<div class="lb-track"><div class="lb-fill ' + cls +
+          '" style="width:' + item.rate.toFixed(1) + '%"></div></div>' +
+        '<div class="lb-rate ' + cls + '">' + formatRate(item.rate) + '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  /* 整个文字题的总得分率：所有已完成模型的得分和 ÷（2 × 题数 × 模型数） */
+  function textOverall(project) {
+    var totals = completedTotals(project);
+    var total = totals.reduce(function (sum, item) { return sum + item.total; }, 0);
+    var max = (project.questions || []).length * 2 * totals.length;
+    return { total: total, max: max, rate: max ? (total / max) * 100 : 0, models: totals.length };
+  }
+
+  function textHomePreview(project) {
+    var totals = completedTotals(project);
+    if (!totals.length) return '<p class="empty-tip">还没有评分数据。</p>';
+
+    var rows = questionRates(project, totals);
+    var easiest = rows.slice(0, 3);
+    var hardest = rows.slice(-3).reverse();
+    var topModels = totals.slice(0, 3);
+
+    function miniModel(item, index) {
+      return '<div class="mini-row">' +
+        '<span class="mini-rank">' + (index + 1) + '</span>' +
+        '<span class="mini-name">' + escapeHtml(item.model.name) + '</span>' +
+        '<span class="mini-rate ' + modelRateClass(item.rate) + '">' + formatRate(item.rate) + '</span>' +
+      '</div>';
+    }
+
+    function miniQuestion(item) {
+      return '<div class="mini-row">' +
+        '<span class="mini-qno">#' + String(item.qid).padStart(2, '0') + '</span>' +
+        '<span class="mini-qtext" title="' + escapeHtml(item.text) + '">' + escapeHtml(item.text) + '</span>' +
+        '<span class="mini-rate ' + questionRateClass(item.rate) + '">' + formatRate(item.rate) + '</span>' +
+      '</div>';
+    }
+
+    return '<div class="text-home-grid">' +
+      '<div class="text-home-col">' +
+        '<p class="text-home-title">模型 Top 3</p>' +
+        topModels.map(miniModel).join('') +
+      '</div>' +
+      '<div class="text-home-col">' +
+        '<p class="text-home-title">最容易的 3 道题</p>' +
+        easiest.map(miniQuestion).join('') +
+      '</div>' +
+      '<div class="text-home-col">' +
+        '<p class="text-home-title">最难的 3 道题</p>' +
+        hardest.map(miniQuestion).join('') +
+      '</div>' +
+    '</div>';
+  }
+
+  function buildTextProject(project, mode) {
+    var questions = project.questions || [];
+    var models = project.models || [];
+    var totals = completedTotals(project);
+    var overall = textOverall(project);
+    var detail = mode === 'detail';
+
+    var chips = [
+      questions.length + ' 道题',
+      models.length + ' 个模型',
+      'WorkBuddy'
+    ].map(function (text) {
+      return '<span class="chip">' + escapeHtml(text) + '</span>';
+    }).join('');
+
+    var promptBox = '';
+    if (project.prompt) {
+      promptBox = '<details class="prompt-box">' +
+        '<summary>查看原始 prompt</summary>' +
+        '<p class="prompt-text">' + escapeHtml(project.prompt) + '</p>' +
+      '</details>';
+    }
+
+    var scoreBox = '<div class="score-box">' +
+      '<span class="score-label">总得分率</span>' +
+      '<strong class="score-value">' + (overall.max ? formatRate(overall.rate) : '待测') + '</strong>' +
+      '<span class="score-detail">' + overall.total + ' / ' + overall.max + ' 分</span>' +
+    '</div>';
+
+    var body = '';
+    if (detail) {
+      body = '<p class="project-rules">' + escapeHtml(textRules()) + '</p>' +
+        '<section class="text-section"><h3 class="text-section-title">模型得分率排行榜</h3>' +
+          textModelTable(totals) +
+        '</section>' +
+        '<section class="text-section"><h3 class="text-section-title">题目得分率排行榜</h3>' +
+          textQuestionsHtml(project) +
+        '</section>';
+    } else {
+      body = textHomePreview(project) +
+        '<div class="more-row"><a class="more-link" href="' +
+          encodeURIComponent(project.id) + '/">查看更多 →</a></div>';
+    }
+
+    var node = document.createElement('article');
+    node.className = 'project';
+    node.dataset.project = project.id;
+    node.innerHTML = '' +
+      '<div class="project-head">' +
+        '<div class="project-info">' +
+          '<div class="project-name-row">' +
+            '<h2 class="project-name">' + escapeHtml(project.title || project.id) + '</h2>' +
+            '<span class="special-badge">特别赛题 · 文字理解</span>' +
+          '</div>' +
+          (project.title && project.title !== project.id
+            ? '<p class="project-title">' + escapeHtml(project.id) + '</p>'
+            : '') +
+          '<div class="project-meta">' + chips + '</div>' +
+        '</div>' +
+        scoreBox +
+      '</div>' +
+      promptBox +
+      body;
+
+    refreshProject(node, project);
+    return node;
+  }
+
   function buildProject(project, mode) {
+    if (project.type === 'text') return buildTextProject(project, mode);
+
     var runs = project.runs || [];
     var models = unique(runs.map(function (run) { return run.model; }));
     var harnesses = unique(runs.map(function (run) { return run.harness; }));
@@ -709,16 +937,26 @@
     applyFilter();
 
     var totalRuns = 0;
+    var textCount = 0;
     var modelSet = [];
     var harnessSet = [];
     projects.forEach(function (project) {
+      if (project.type === 'text') {
+        textCount += 1;
+        (project.models || []).forEach(function (model) {
+          if (modelSet.indexOf(model.id) === -1) modelSet.push(model.id);
+          if (model.harness && harnessSet.indexOf(model.harness) === -1) harnessSet.push(model.harness);
+        });
+        return;
+      }
       (project.runs || []).forEach(function (run) {
         totalRuns += 1;
         if (modelSet.indexOf(run.model) === -1) modelSet.push(run.model);
         if (harnessSet.indexOf(run.harness) === -1) harnessSet.push(run.harness);
       });
     });
-    el.heroNote.textContent = projects.length + ' 个 benchmark · ' + totalRuns + ' 次实测 · ' +
+    el.heroNote.textContent = projects.length + ' 个 benchmark · ' + totalRuns + ' 次实测' +
+      (textCount ? ' · ' + textCount + ' 个文字题' : '') + ' · ' +
       modelSet.length + ' 个模型 × ' + harnessSet.length + ' 个 Harness';
   }
 

@@ -1,0 +1,352 @@
+{
+  "_说明": "scores 的键是题号（从 1 开始，与 questions 文件的行序一致），值是 { 模型id: 0|1|2 }。完整解释到位=2，仅解释部分=1，跑偏=0；未评分的题或模型可以留空。",
+  "models": [
+    {
+      "id": "deepseek-v41-flash",
+      "name": "DeepSeek-V4.1-Flash",
+      "harness": "workbuddy"
+    },
+    {
+      "id": "DeepSeek-V4.1-Flash-1017",
+      "name": "DeepSeek-V4.1-Flash-1017",
+      "harness": "workbuddy"
+    },
+    {
+      "id": "glm-5.3-flash",
+      "name": "GLM-5.3-Flash",
+      "harness": "workbuddy"
+    },
+    {
+      "id": "hy4-preview",
+      "name": "Hy4-Preview",
+      "harness": "workbuddy"
+    },
+    {
+      "id": "Hy4",
+      "name": "Hy4",
+      "harness": "workbuddy"
+    },
+    {
+      "id": "mimo-v2.6-pro",
+      "name": "MiMo-V2.6-Pro",
+      "harness": "workbuddy"
+    },
+    {
+      "id": "MiniMax-M3.1-Flash",
+      "name": "MiniMax-M3.1-Flash",
+      "harness": "workbuddy"
+    },
+    {
+      "id": "space-bunny",
+      "name": "Space-Bunny",
+      "harness": "workbuddy"
+    },
+    {
+      "id": "step-5-preview",
+      "name": "Step-5-Preview",
+      "harness": "workbuddy"
+    }
+  ],
+  "scores": {
+    "1": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "2": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 1,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 1
+    },
+    "3": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 0,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 0,
+      "step-5-preview": 2
+    },
+    "4": {
+      "DeepSeek-V4.1-Flash-1017": 1,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 0,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 0,
+      "step-5-preview": 2
+    },
+    "5": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "6": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 0,
+      "Hy4": 2,
+      "glm-5.3-flash": 0,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 0,
+      "step-5-preview": 0
+    },
+    "7": {
+      "DeepSeek-V4.1-Flash-1017": 1,
+      "hy4-preview": 0,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 0,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 0,
+      "step-5-preview": 0
+    },
+    "8": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "9": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 0,
+      "Hy4": 0,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 0,
+      "step-5-preview": 0
+    },
+    "10": {
+      "DeepSeek-V4.1-Flash-1017": 0,
+      "hy4-preview": 0,
+      "MiniMax-M3.1-Flash": 0,
+      "Hy4": 0,
+      "glm-5.3-flash": 0,
+      "mimo-v2.6-pro": 0,
+      "space-bunny": 0,
+      "step-5-preview": 0
+    },
+    "11": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 0,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "12": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 1
+    },
+    "13": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "14": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "15": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "16": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 0,
+      "step-5-preview": 2
+    },
+    "17": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 0,
+      "MiniMax-M3.1-Flash": 0,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "18": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "19": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 1,
+      "mimo-v2.6-pro": 1,
+      "space-bunny": 1,
+      "step-5-preview": 2
+    },
+    "20": {
+      "DeepSeek-V4.1-Flash-1017": 1,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "21": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 0,
+      "step-5-preview": 2
+    },
+    "22": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "23": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "24": {
+      "DeepSeek-V4.1-Flash-1017": 0,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 0,
+      "mimo-v2.6-pro": 0,
+      "space-bunny": 2,
+      "step-5-preview": 0
+    },
+    "25": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "26": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 0,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 0,
+      "step-5-preview": 0
+    },
+    "27": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "28": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    },
+    "29": {
+      "DeepSeek-V4.1-Flash-1017": 0,
+      "hy4-preview": 0,
+      "MiniMax-M3.1-Flash": 0,
+      "Hy4": 0,
+      "glm-5.3-flash": 0,
+      "mimo-v2.6-pro": 0,
+      "space-bunny": 0,
+      "step-5-preview": 0
+    },
+    "30": {
+      "DeepSeek-V4.1-Flash-1017": 2,
+      "hy4-preview": 2,
+      "MiniMax-M3.1-Flash": 2,
+      "Hy4": 2,
+      "glm-5.3-flash": 2,
+      "mimo-v2.6-pro": 2,
+      "space-bunny": 2,
+      "step-5-preview": 2
+    }
+  }
+}

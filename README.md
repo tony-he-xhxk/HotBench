@@ -139,6 +139,51 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
 - 用 `file://` 直接打开页面时浏览器不允许 `fetch`，会退回数据文件里的内容（和预览的限制一样）；
 - 页面上只展示文本内容，不显示文件路径。
 
+## 文字题（成绩单型）
+
+不跑 HTML 的题目（例如 `feihua-wenxue` 的谐音梗理解）用「题目 + 评分表」的形式接入：
+
+```
+feihua-wenxue/
+├── feihua-wenxue.prompt.txt       发给模型的提示词（说明怎么解释、怎么输出）
+├── feihua-wenxue.questions.txt    每行一道题
+├── feihua-wenxue.results.json     模型列表 + 逐题评分
+└── feihua-wenxue.meta.json        只用来排顺序（order）
+```
+
+`results.json` 的结构：
+
+```json
+{
+  "models": [
+    { "id": "deepseek-v41-flash", "name": "DeepSeek-V4.1-Flash", "harness": "workbuddy" }
+  ],
+  "scores": {
+    "1": { "deepseek-v41-flash": 2 },
+    "2": { "deepseek-v41-flash": 1 }
+  }
+}
+```
+
+- `scores` 的键是题号（从 1 开始，对应 questions 文件的行序），值是 `{ 模型 id: 0 | 1 | 2 }`；
+- 完整解释到位 = 2 分，仅解释部分 = 1 分，跑偏 = 0 分；没评的题/模型可以留空；
+- 每个模型的总得分率 = 实得分 ÷（2 × 题数）× 100%；
+- 页面会展示模型总得分率、原题，以及逐题的「2 分 / 1 分 / 0 分」模型分组，不展示模型的长回答。
+
+运行模型时，把 `prompt.txt` 的说明与 `questions.txt` 的题目按顺序拼接后发送即可。
+
+评分可以直接用脚本批量录入：
+
+```bash
+node tools/add-text-score.mjs
+```
+
+- 选择模型 → 输入「0 分（跑偏）」题号 → 输入「1 分（部分解释）」题号（可留空）；
+- 其余题目默认记 2 分（完整解释）；
+- 如果本次写入与 JSON 里已有的「模型 + Harness + 题号 + 分数」完全重复，会让你选择：
+  `1` 忽略重复（只写不重复的）或 `2` 放弃本批次。
+- 同一题如果已有不同分数，会提示冲突并让你选择：`1` 覆盖（用新分数）或 `2` 忽略（保持旧分数）。
+
 ## 加一个新 benchmark
 
 1. 在仓库根目录建文件夹 `新benchmark名/`；

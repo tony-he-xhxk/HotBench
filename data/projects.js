@@ -599,6 +599,398 @@ window.HOTBENCH_DATA = {
           "tone": "green"
         }
       ]
+    },
+    {
+      "id": "feihua-wenxue",
+      "title": "废话文学 · 谐音梗理解",
+      "summary": "",
+      "type": "text",
+      "order": 4,
+      "prompt": "你是一位中文语义理解专家。下面共有 30 道「废话文学 / 谐音梗」题目，每一行一题。\n\n请逐题解释，要求：\n1. 严格按题号作答（第 1 题、第 2 题……），一题一段，不要合并、不要遗漏、不要自行增删题目。\n2. 每道题都要说清三件事：\n   - 字面上这句话在说什么；\n   - 它真正想表达的梗、笑点或反差是什么；\n   - 关键的谐音、双关、断句或语义反转在哪里。\n3. 解释要完整、准确、能让没看过原句的人看懂笑点；不要只复述字面，也不要跑题。\n4. 如果一句话有多种合理解读，可以把它们都写出来。\n\n输出格式示例：\n【第1题】\n解释：……\n\n题目在下方按行给出（共 30 题）：",
+      "promptUrl": "feihua-wenxue/feihua-wenxue.prompt.txt",
+      "questions": [
+        "明知山有虎 那就别去明知山",
+        "关关难过 那就哄哄关关",
+        "你要稳稳的幸福 那稳稳怎么办",
+        "太空才有空间站 太挤就没有空间站",
+        "记住 四个周润发 就是一个月润发",
+        "你歇斯底里是崩溃 底里歇斯是美味",
+        "一人做事一人当 当当做事当当当",
+        "是金子总会花光 慢慢急 不要来",
+        "妈的表示情绪 父的表示食物",
+        "失败是成功之母 扫码才成功支付",
+        "驴拉磨 牛拉犁 伊拉克 马拉松 金克木 水克火 李克勤 麦克风",
+        "其实我也曾经想过一了百了 可惜我 真的 了不起",
+        "如果众人皆醉 那我肯定更醉",
+        "退一万步来说的话 退一万步确实累",
+        "普通人想要翻身 那你记得侧睡",
+        "打个比方的话 比方说 你赔我医药费",
+        "就像我喜欢披萨 因为它没有七片",
+        "俗话说 吃一堑 那我就又长了一堑",
+        "因为读书我没上兴趣班 长大没兴趣上班",
+        "男儿膝下有小腿 躲得过初一 躲不过高三",
+        "如果强扭的瓜不甜 你就别找强扭买瓜",
+        "鲁智深倒拔垂杨柳 他赔了八千八",
+        "毕竟一寸光阴一寸金 三寸光阴一个鑫",
+        "我很好相处 处不好你自己找原因",
+        "木兰代父从军 马尔代夫旅行",
+        "一行行 行行行 一行不行 行行不行",
+        "虽然我的桌子乱 可是邓紫棋",
+        "成功靠后天努力 那么今天就休息",
+        "毕竟 四个字 是三个字 而三个字 是四个字",
+        "只要我肯放弃 这世上就无难事"
+      ],
+      "questionsUrl": "feihua-wenxue/feihua-wenxue.questions.txt",
+      "models": [
+        {
+          "id": "deepseek-v41-flash",
+          "name": "DeepSeek-V4.1-Flash",
+          "harness": "workbuddy"
+        },
+        {
+          "id": "DeepSeek-V4.1-Flash-1017",
+          "name": "DeepSeek-V4.1-Flash-1017",
+          "harness": "workbuddy"
+        },
+        {
+          "id": "glm-5.3-flash",
+          "name": "GLM-5.3-Flash",
+          "harness": "workbuddy"
+        },
+        {
+          "id": "hy4-preview",
+          "name": "Hy4-Preview",
+          "harness": "workbuddy"
+        },
+        {
+          "id": "Hy4",
+          "name": "Hy4",
+          "harness": "workbuddy"
+        },
+        {
+          "id": "mimo-v2.6-pro",
+          "name": "MiMo-V2.6-Pro",
+          "harness": "workbuddy"
+        },
+        {
+          "id": "MiniMax-M3.1-Flash",
+          "name": "MiniMax-M3.1-Flash",
+          "harness": "workbuddy"
+        },
+        {
+          "id": "space-bunny",
+          "name": "Space-Bunny",
+          "harness": "workbuddy"
+        },
+        {
+          "id": "step-5-preview",
+          "name": "Step-5-Preview",
+          "harness": "workbuddy"
+        }
+      ],
+      "scores": {
+        "1": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "2": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 1,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 1
+        },
+        "3": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 0,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 0,
+          "step-5-preview": 2
+        },
+        "4": {
+          "DeepSeek-V4.1-Flash-1017": 1,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 0,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 0,
+          "step-5-preview": 2
+        },
+        "5": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "6": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 0,
+          "Hy4": 2,
+          "glm-5.3-flash": 0,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 0,
+          "step-5-preview": 0
+        },
+        "7": {
+          "DeepSeek-V4.1-Flash-1017": 1,
+          "hy4-preview": 0,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 0,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 0,
+          "step-5-preview": 0
+        },
+        "8": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "9": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 0,
+          "Hy4": 0,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 0,
+          "step-5-preview": 0
+        },
+        "10": {
+          "DeepSeek-V4.1-Flash-1017": 0,
+          "hy4-preview": 0,
+          "MiniMax-M3.1-Flash": 0,
+          "Hy4": 0,
+          "glm-5.3-flash": 0,
+          "mimo-v2.6-pro": 0,
+          "space-bunny": 0,
+          "step-5-preview": 0
+        },
+        "11": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 0,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "12": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 1
+        },
+        "13": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "14": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "15": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "16": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 0,
+          "step-5-preview": 2
+        },
+        "17": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 0,
+          "MiniMax-M3.1-Flash": 0,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "18": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "19": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 1,
+          "mimo-v2.6-pro": 1,
+          "space-bunny": 1,
+          "step-5-preview": 2
+        },
+        "20": {
+          "DeepSeek-V4.1-Flash-1017": 1,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "21": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 0,
+          "step-5-preview": 2
+        },
+        "22": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "23": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "24": {
+          "DeepSeek-V4.1-Flash-1017": 0,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 0,
+          "mimo-v2.6-pro": 0,
+          "space-bunny": 2,
+          "step-5-preview": 0
+        },
+        "25": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "26": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 0,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 0,
+          "step-5-preview": 0
+        },
+        "27": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "28": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        },
+        "29": {
+          "DeepSeek-V4.1-Flash-1017": 0,
+          "hy4-preview": 0,
+          "MiniMax-M3.1-Flash": 0,
+          "Hy4": 0,
+          "glm-5.3-flash": 0,
+          "mimo-v2.6-pro": 0,
+          "space-bunny": 0,
+          "step-5-preview": 0
+        },
+        "30": {
+          "DeepSeek-V4.1-Flash-1017": 2,
+          "hy4-preview": 2,
+          "MiniMax-M3.1-Flash": 2,
+          "Hy4": 2,
+          "glm-5.3-flash": 2,
+          "mimo-v2.6-pro": 2,
+          "space-bunny": 2,
+          "step-5-preview": 2
+        }
+      },
+      "resultsUrl": "feihua-wenxue/feihua-wenxue.results.json"
     }
   ]
 };

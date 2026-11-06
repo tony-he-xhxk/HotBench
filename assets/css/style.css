@@ -351,6 +351,100 @@ button { font-family: inherit; }
   text-decoration: none;
 }
 
+/* ===== 文字题 ===== */
+.special-badge {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #5a4ab8;
+  background: #f2efff;
+  border: 1px solid #d8d1f5;
+  border-radius: 999px;
+  padding: 3px 13px;
+  white-space: nowrap;
+}
+.harness-tag { margin-left: 6px; font-size: 11.5px; color: var(--muted); }
+
+.text-section { margin-top: 22px; }
+.text-section-title {
+  font-size: 16px;
+  color: var(--accent-dark);
+  border-left: 4px solid var(--accent);
+  padding-left: 10px;
+  margin-bottom: 12px;
+}
+
+/* 排行榜 */
+.leaderboard { display: flex; flex-direction: column; }
+.lb-row {
+  display: grid;
+  grid-template-columns: 30px minmax(220px, 320px) 1fr 60px;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 2px;
+  border-bottom: 1px dashed var(--border);
+}
+.lb-row:last-child { border-bottom: 0; }
+.lb-rank { text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); }
+.lb-rank.top { color: var(--accent); }
+.lb-name {
+  font-size: 14.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-sub { font-size: 11.5px; color: var(--muted); }
+.lb-track { height: 10px; border-radius: 999px; background: #eaf6f5; overflow: hidden; }
+.lb-fill { height: 100%; border-radius: 999px; }
+.lb-fill.is-high { background: linear-gradient(90deg, #5ecf8d, #2e9e5b); }
+.lb-fill.is-mid { background: linear-gradient(90deg, #b4ecc5, #85d7a1); }
+.lb-fill.is-low { background: linear-gradient(90deg, #f08a84, #d64545); }
+.lb-rate {
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.lb-rate.is-high { color: #2e7d32; }
+.lb-rate.is-mid { color: #3f8f5f; }
+.lb-rate.is-low { color: #c0392b; }
+
+/* 题目行 */
+.qrow { grid-template-columns: 30px 40px minmax(0, 1fr) 220px 60px; }
+.lb-qno { font-size: 12px; font-weight: 700; color: var(--accent-dark); }
+.lb-qtext { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 首页文字题预览 */
+.text-home-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 14px;
+}
+.text-home-col { min-width: 0; }
+.text-home-title {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent-dark);
+}
+.text-home-title.spaced { margin-top: 16px; }
+.mini-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 13px;
+}
+.mini-rank { text-align: center; color: var(--muted); font-weight: 700; }
+.mini-name, .mini-qtext { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-qno { font-size: 12px; font-weight: 700; color: var(--accent-dark); }
+.mini-rate { font-weight: 700; font-variant-numeric: tabular-nums; }
+.mini-rate.is-high { color: #2e7d32; }
+.mini-rate.is-mid { color: #3f8f5f; }
+.mini-rate.is-low { color: #c0392b; }
+
 /* 原始 prompt */
 .prompt-box {
   margin-top: 14px;
@@ -686,6 +780,18 @@ body.lightbox-open { overflow: hidden; }
   .score-box { align-items: flex-start; width: 100%; }
   .detail-toolbar { flex-direction: column; align-items: stretch; }
   .detail-toolbar > span { width: 5.2em; }
+  .text-home-grid { grid-template-columns: 1fr; gap: 14px; }
+  .lb-row { grid-template-columns: 26px minmax(0, 1fr) 58px; row-gap: 6px; }
+  .lb-rank { grid-row: 1 / 3; }
+  .lb-who { grid-column: 2 / 3; grid-row: 1; }
+  .lb-rate { grid-column: 3 / 4; grid-row: 1; }
+  .lb-track { grid-column: 2 / 4; grid-row: 2; }
+  .qrow { grid-template-columns: 26px 40px minmax(0, 1fr) 58px; }
+  .qrow .lb-rank { grid-row: 1 / 3; }
+  .qrow .lb-qno { grid-column: 2 / 3; grid-row: 1; }
+  .qrow .lb-qtext { grid-column: 3 / 4; grid-row: 1; }
+  .qrow .lb-rate { grid-column: 4 / 5; grid-row: 1; }
+  .qrow .lb-track { grid-column: 2 / 5; grid-row: 2; }
   .previews { gap: 16px; }
   .preview { flex-basis: 100%; max-width: none; }
   .lightbox { padding: 10px; }

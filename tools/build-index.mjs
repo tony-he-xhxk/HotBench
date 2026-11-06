@@ -124,6 +124,22 @@ function findReviews(projectDir, projectId) {
   return found ? join(projectDir, found) : null;
 }
 
+function findQuestions(projectDir, projectId) {
+  const preferred = join(projectDir, projectId + '.questions.txt');
+  if (existsSync(preferred)) return preferred;
+  const found = readdirSync(projectDir)
+    .find((name) => name.toLowerCase().endsWith('.questions.txt'));
+  return found ? join(projectDir, found) : null;
+}
+
+function findResults(projectDir, projectId) {
+  const preferred = join(projectDir, projectId + '.results.json');
+  if (existsSync(preferred)) return preferred;
+  const found = readdirSync(projectDir)
+    .find((name) => name.toLowerCase().endsWith('.results.json'));
+  return found ? join(projectDir, found) : null;
+}
+
 function readJson(file, label) {
   try {
     const parsed = JSON.parse(readFileSync(file, 'utf8'));
@@ -211,6 +227,53 @@ function scan() {
       const metaFile = findMeta(projectDir, projectId);
       const meta = metaFile ? readJson(metaFile, 'meta') : {};
       const chances = Number(meta.chances) || 0;
+
+      /* 文字题：有 <项目>.results.json 时，不扫描实测目录，直接构造成绩单型项目 */
+      const resultsFile = findResults(projectDir, projectId);
+      if (resultsFile) {
+        const promptFile = findPrompt(projectDir, projectId);
+        const questionsFile = findQuestions(projectDir, projectId);
+        const questions = questionsFile
+          ? readFileSync(questionsFile, 'utf8')
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean)
+          : [];
+        const results = readJson(resultsFile, 'results');
+        const models = Array.isArray(results.models) ? results.models : [];
+        const scores = (results.scores && typeof results.scores === 'object') ? results.scores : {};
+
+        const invalidScores = [];
+        Object.keys(scores).forEach((questionId) => {
+          const row = scores[questionId] || {};
+          Object.keys(row).forEach((modelId) => {
+            const value = row[modelId];
+            if (value !== null && value !== undefined && value !== 0 && value !== 1 && value !== 2) {
+              invalidScores.push('第 ' + questionId + ' 题 / ' + modelId + ' = ' + value);
+            }
+          });
+        });
+        if (invalidScores.length) {
+          console.warn('! ' + projectId + ' 的评分必须是 0/1/2：' + invalidScores.join('；'));
+        }
+
+        projects.push({
+          id: projectId,
+          title: old.title || projectId,
+          summary: old.summary || '',
+          type: 'text',
+          order: Number(meta.order) || Number(old.order) || 0,
+          prompt: promptFile ? readFileSync(promptFile, 'utf8').trim() : (old.prompt || ''),
+          promptUrl: promptFile ? toUrl(promptFile) : '',
+          questions: questions,
+          questionsUrl: questionsFile ? toUrl(questionsFile) : '',
+          models: models,
+          scores: scores,
+          resultsUrl: toUrl(resultsFile)
+        });
+        return;
+      }
+
       const runs = [];
 
       listDirs(projectDir).forEach((dirName) => {
@@ -349,7 +412,7 @@ function validateLights(data) {
     const chances = Number(project.chances) || 0;
     const groups = new Map();
 
-    project.runs.forEach((run) => {
+    (project.runs || []).forEach((run) => {
       const key = run.model + '.' + run.harness;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(run);
@@ -493,11 +556,15 @@ function main() {
     console.log('已生成详情页：' + pages.join('、'));
   }
 
-  const totalRuns = data.projects.reduce((sum, project) => sum + project.runs.length, 0);
+  const totalRuns = data.projects.reduce((sum, project) => sum + (project.runs || []).length, 0);
   console.log('已写入 ' + outFile);
   console.log('项目 ' + data.projects.length + ' 个 / 实测 ' + totalRuns + ' 次');
   data.projects.forEach((project) => {
-    console.log('  - ' + project.id + '：' + project.runs.length + ' 次');
+    if (project.type === 'text') {
+      console.log('  - ' + project.id + '：文字题 ' + project.questions.length + ' 道');
+    } else {
+      console.log('  - ' + project.id + '：' + (project.runs || []).length + ' 次');
+    }
   });
 }
 
