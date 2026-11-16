@@ -46,6 +46,7 @@ window.HOTBENCH_DATA = {
       "promptUrl": "snake/snake.prompt.txt",
       "tier": "bronze",
       "chances": 1,
+      "preview": "screenshot",
       "order": 1,
       "entryOrder": [
         "deepseek-v41-flash.codex",
@@ -176,6 +177,7 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 1,
           "file": "snake/snake.hy4-flash.workbuddy.1/snake.hy4-flash.workbuddy.1.html",
+          "shot": "snake/snake.hy4-flash.workbuddy.1/snake.hy4-flash.workbuddy.1.webp",
           "tone": "green"
         },
         {
@@ -260,6 +262,7 @@ window.HOTBENCH_DATA = {
       "promptUrl": "pelican-bicycle/pelican-bicycle.prompt.txt",
       "tier": "silver",
       "chances": 2,
+      "preview": "live",
       "order": 2,
       "entryOrder": [],
       "reviews": {
@@ -560,6 +563,7 @@ window.HOTBENCH_DATA = {
       "promptUrl": "panda-waimai/panda-waimai.prompt.txt",
       "tier": "gold",
       "chances": 3,
+      "preview": "live",
       "order": 3,
       "entryOrder": [
         "DeepSeek-V4.1-Flash-1017.codex",

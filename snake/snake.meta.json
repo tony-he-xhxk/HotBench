@@ -1,6 +1,7 @@
 {
   "tier": "bronze",
   "chances": 1,
+  "preview": "screenshot",
   "order": 1,
   "entryOrder": [
     "deepseek-v41-flash.codex",

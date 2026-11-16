@@ -1,6 +1,7 @@
 {
   "tier": "silver",
   "chances": 2,
+  "preview": "live",
   "order": 2,
   "lights": {
     "deepseek-v41-flash.codex.1": "red",

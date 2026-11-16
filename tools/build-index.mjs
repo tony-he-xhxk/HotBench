@@ -49,6 +49,9 @@ const DEFAULT_HARNESS_LABELS = {
   opencode: 'OpenCode'
 };
 
+const VALID_TIERS = new Set(['bronze', 'silver', 'gold']);
+const VALID_PREVIEW_TYPES = new Set(['live', 'screenshot']);
+
 /* ---------- 参数 ---------- */
 
 function parseArgs(argv) {
@@ -227,6 +230,7 @@ function scan() {
       const metaFile = findMeta(projectDir, projectId);
       const meta = metaFile ? readJson(metaFile, 'meta') : {};
       const chances = Number(meta.chances) || 0;
+      const preview = String(meta.preview || old.preview || '').trim().toLowerCase();
 
       /* 文字题：有 <项目>.results.json 时，不扫描实测目录，直接构造成绩单型项目 */
       const resultsFile = findResults(projectDir, projectId);
@@ -396,6 +400,7 @@ function scan() {
         promptUrl: promptFile ? toUrl(promptFile) : '',
         tier: String(meta.tier || old.tier || ''),
         chances: chances || Number(old.chances) || 0,
+        preview: preview,
         order: Number(meta.order) || Number(old.order) || 0,
         entryOrder: Array.isArray(meta.entryOrder)
           ? meta.entryOrder
@@ -471,6 +476,251 @@ function validateLights(data) {
   return issues;
 }
 
+function imageKind(file) {
+  const bytes = readFileSync(file);
+  if (bytes.length >= 8 &&
+      bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+    return 'png';
+  }
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return 'jpeg';
+  }
+  if (bytes.length >= 12 &&
+      bytes.subarray(0, 4).toString('ascii') === 'RIFF' &&
+      bytes.subarray(8, 12).toString('ascii') === 'WEBP') {
+    return 'webp';
+  }
+  return '';
+}
+
+/* 构建前的完整自检。所有错误一次列出，任一失败都不写数据、不生成详情页。 */
+function validateData(data) {
+  const issues = [];
+  const projectIds = new Set();
+
+  data.projects.forEach((project) => {
+    const projectDir = join(root, project.id);
+
+    if (projectIds.has(project.id)) {
+      issues.push(project.id + '：项目 ID 重复');
+    }
+    projectIds.add(project.id);
+
+    if (project.type === 'text') {
+      if (!String(project.prompt || '').trim()) issues.push(project.id + '：缺少 prompt');
+      if (!Array.isArray(project.questions) || !project.questions.length) {
+        issues.push(project.id + '：questions.txt 不能为空');
+      }
+
+      const models = Array.isArray(project.models) ? project.models : [];
+      if (!models.length) issues.push(project.id + '：没有有效参赛模型');
+
+      const modelIds = new Set();
+      const modelNames = new Set();
+      models.forEach((model) => {
+        const id = String(model.id || '').trim();
+        const name = String(model.name || '').trim();
+        const harness = String(model.harness || '').trim();
+        if (!id) issues.push(project.id + '：存在空的模型 id');
+        if (!name) issues.push(project.id + '：模型 ' + (id || '(空 id)') + ' 缺少网页显示名');
+        if (!harness) issues.push(project.id + ' / ' + (id || '(空 id)') + '：缺少 Harness');
+        if (id && modelIds.has(id)) issues.push(project.id + '：模型 id 重复：' + id);
+        if (name && modelNames.has(name.toLowerCase())) {
+          issues.push(project.id + '：网页显示名重复：' + name);
+        }
+        if (id) modelIds.add(id);
+        if (name) modelNames.add(name.toLowerCase());
+      });
+
+      const scores = project.scores && typeof project.scores === 'object' ? project.scores : {};
+      const scoredIds = new Set();
+      Object.keys(scores).forEach((questionId) => {
+        const number = Number(questionId);
+        if (!Number.isInteger(number) || number < 1 || number > project.questions.length) {
+          issues.push(project.id + '：评分题号越界：' + questionId);
+          return;
+        }
+        const row = scores[questionId];
+        if (!row || typeof row !== 'object' || Array.isArray(row)) {
+          issues.push(project.id + ' / 第 ' + questionId + ' 题：评分行必须是对象');
+          return;
+        }
+        Object.keys(row).forEach((modelId) => {
+          const value = row[modelId];
+          if (!modelIds.has(modelId)) {
+            issues.push(project.id + ' / 第 ' + questionId + ' 题：评分引用了未登记模型 ' + modelId);
+          }
+          if (value === 0 || value === 1 || value === 2) scoredIds.add(modelId);
+          else if (value !== null && value !== undefined) {
+            issues.push(project.id + ' / 第 ' + questionId + ' 题 / ' + modelId +
+              '：分数必须是 0、1 或 2，当前为 ' + value);
+          }
+        });
+      });
+
+      models.forEach((model) => {
+        if (model.id && !scoredIds.has(model.id)) {
+          issues.push(project.id + ' / ' + model.id + '：已登记但没有任何有效评分');
+        }
+      });
+
+      const resultsFile = findResults(projectDir, project.id);
+      if (!resultsFile) {
+        issues.push(project.id + '：缺少 results.json');
+      } else {
+        const raw = readJson(resultsFile, 'results');
+        const rawModels = Array.isArray(raw.models) ? raw.models : [];
+        rawModels.forEach((model) => {
+          if (model.id && !scoredIds.has(model.id)) {
+            issues.push(project.id + ' / ' + model.id +
+              '：results.models 中存在空站位，但没有有效评分');
+          }
+        });
+      }
+      return;
+    }
+
+    const metaFile = findMeta(projectDir, project.id);
+    const meta = metaFile ? readJson(metaFile, 'meta') : {};
+    const preview = String(project.preview || '').trim().toLowerCase();
+    const tier = String(project.tier || '').trim().toLowerCase();
+    const chances = Number(project.chances) || 0;
+
+    if (!metaFile) issues.push(project.id + '：运行型项目缺少 meta.json');
+    if (!VALID_PREVIEW_TYPES.has(preview)) {
+      issues.push(project.id + '：meta.preview 必须是 live 或 screenshot');
+    }
+    if (!VALID_TIERS.has(tier)) {
+      issues.push(project.id + '：meta.tier 必须是 bronze、silver 或 gold');
+    }
+    if (!Number.isInteger(chances) || chances < 1) {
+      issues.push(project.id + '：meta.chances 必须是大于 0 的整数');
+    }
+    if (!findPrompt(projectDir, project.id)) issues.push(project.id + '：缺少 prompt.txt');
+
+    const runIds = new Set();
+    const entryKeys = new Set();
+    let runDirCount = 0;
+
+    listDirs(projectDir).forEach((dirName) => {
+      const parsed = parseRunDir(project.id, dirName);
+      if (!parsed) {
+        issues.push(project.id + '：存在无法解析的实测目录 ' + dirName);
+        return;
+      }
+      runDirCount += 1;
+      if (Number.isInteger(chances) && parsed.attempt > chances) {
+        issues.push(project.id + ' / ' + dirName + '：轮次超过 meta.chances=' + chances);
+      }
+
+      const runDir = join(projectDir, dirName);
+      const files = readdirSync(runDir, { withFileTypes: true })
+        .filter((entry) => entry.isFile())
+        .map((entry) => entry.name);
+      const htmlFiles = files.filter((name) => /\.html$/i.test(name));
+      const dumpFiles = files.filter((name) => /\.dump\.txt$/i.test(name));
+      const shotFiles = files.filter((name) => /\.(png|jpe?g|webp)$/i.test(name));
+
+      if (htmlFiles.length > 1) {
+        issues.push(project.id + ' / ' + dirName + '：最多只能有一个 HTML');
+      } else if (htmlFiles.length === 1 && htmlFiles[0] !== dirName + '.html') {
+        issues.push(project.id + ' / ' + dirName + '：HTML 必须命名为 ' + dirName + '.html');
+      } else if (htmlFiles.length === 1 &&
+          !readFileSync(join(runDir, htmlFiles[0]), 'utf8').trim()) {
+        issues.push(project.id + ' / ' + dirName + '：HTML 不能为空');
+      }
+      if (dumpFiles.length > 1) {
+        issues.push(project.id + ' / ' + dirName + '：最多只能有一个 dump.txt');
+      } else if (dumpFiles.length === 1 && dumpFiles[0] !== dirName + '.dump.txt') {
+        issues.push(project.id + ' / ' + dirName + '：异常文本必须命名为 ' + dirName + '.dump.txt');
+      }
+      if (htmlFiles.length && dumpFiles.length) {
+        issues.push(project.id + ' / ' + dirName + '：HTML 与 dump.txt 不能同时存在');
+      }
+      if (!htmlFiles.length && !dumpFiles.length) {
+        issues.push(project.id + ' / ' + dirName + '：缺少 HTML 或 dump.txt');
+      }
+
+      if (shotFiles.length > 1) {
+        issues.push(project.id + ' / ' + dirName + '：最多只能有一张截图');
+      }
+      shotFiles.forEach((name) => {
+        if (!name.toLowerCase().startsWith(dirName.toLowerCase() + '.')) {
+          issues.push(project.id + ' / ' + dirName + '：截图必须与实测目录同名：' + name);
+        }
+      });
+
+      if (preview === 'screenshot' && htmlFiles.length && shotFiles.length === 0) {
+        issues.push(project.id + ' / ' + dirName + '：截图型项目缺少同名 png/jpg/webp 截图');
+      }
+      if (preview === 'live' && shotFiles.length) {
+        issues.push(project.id + ' / ' + dirName +
+          '：live 项目不应有截图；如需截图卡片请把 meta.preview 改为 screenshot');
+      }
+      if (preview === 'screenshot' && !htmlFiles.length && shotFiles.length) {
+        issues.push(project.id + ' / ' + dirName + '：异常轮次不应放截图');
+      }
+
+      shotFiles.forEach((name) => {
+        const shotFile = join(runDir, name);
+        if (!imageKind(shotFile)) {
+          issues.push(project.id + ' / ' + dirName + '：截图文件格式损坏或不受支持：' + name);
+        }
+      });
+
+      const dumpFile = dumpFiles.length === 1 ? join(runDir, dumpFiles[0]) : null;
+      if (dumpFile && !readFileSync(dumpFile, 'utf8').trim()) {
+        issues.push(project.id + ' / ' + dirName + '：dump.txt 不能为空');
+      }
+
+      const runId = parsed.model + '.' + parsed.harness + '.' + parsed.attempt;
+      runIds.add(runId);
+      entryKeys.add(parsed.model + '.' + parsed.harness);
+    });
+
+    if (!runDirCount) issues.push(project.id + '：没有任何实测目录');
+
+    const lightTargetIds = new Set(runIds);
+    (project.runs || []).forEach((run) => {
+      if (run.id) lightTargetIds.add(run.id);
+    });
+    const lights = meta.lights && typeof meta.lights === 'object' ? meta.lights : {};
+    Object.keys(lights).forEach((key) => {
+      const normalized = key.startsWith(project.id + '.') ? key.slice(project.id.length + 1) : key;
+      if (!lightTargetIds.has(normalized)) {
+        issues.push(project.id + '：meta.lights 引用了不存在的实测 ' + key);
+      }
+    });
+
+    (project.runs || []).forEach((run) => {
+      if (!run.forfeit && !normalizeTone(run.tone)) {
+        issues.push(project.id + ' / ' + run.id + '：缺少有效指示灯颜色');
+      }
+    });
+
+    const reviews = project.reviews && typeof project.reviews === 'object' ? project.reviews : {};
+    entryKeys.forEach((key) => {
+      if (!String(reviews[key] || '').trim()) {
+        issues.push(project.id + ' / ' + key + '：缺少短评');
+      }
+    });
+    Object.keys(reviews).forEach((key) => {
+      if (key.charAt(0) !== '_' && !entryKeys.has(key)) {
+        issues.push(project.id + '：reviews.json 含有找不到对应实测的条目 ' + key);
+      }
+    });
+
+    const entryOrder = Array.isArray(project.entryOrder) ? project.entryOrder : [];
+    entryOrder.forEach((key) => {
+      if (!entryKeys.has(key)) {
+        issues.push(project.id + '：entryOrder 引用了不存在的条目 ' + key);
+      }
+    });
+  });
+
+  return issues;
+}
+
 /* 计算某个条目在某个赛题里的得分（与前端规则一致：第 N 轮才做对得 剩余机会+1 分，绿/黄都算对） */
 function entryScore(runs, chances) {
   const byAttempt = {};
@@ -534,19 +784,19 @@ function main() {
 
   const data = scan();
 
-  const lightIssues = validateLights(data);
-  if (lightIssues.length) {
-    console.error('灯色约束检查失败：');
-    lightIssues.forEach((message) => console.error('  ! ' + message));
-    console.error('（绿灯必须是该条目最后一次尝试；达到机会次数后也不会再有下一轮）');
-    process.exit(1);
-  }
+  const checks = [
+    { name: '项目结构与资源', issues: validateData(data) },
+    { name: '灯色约束', issues: validateLights(data) },
+    { name: '黄金题资格', issues: validateGoldEligibility(data) }
+  ];
+  const failedChecks = checks.filter((check) => check.issues.length);
 
-  const goldIssues = validateGoldEligibility(data);
-  if (goldIssues.length) {
-    console.error('黄金题资格检查失败：');
-    goldIssues.forEach((message) => console.error('  ! ' + message));
-    console.error('（只有青铜、白银都满分的「模型 × Harness」才能参加黄金题）');
+  if (failedChecks.length) {
+    console.error('构建自检失败，未写入任何文件：');
+    failedChecks.forEach((check) => {
+      console.error('\n[' + check.name + ']');
+      check.issues.forEach((message) => console.error('  ! ' + message));
+    });
     process.exit(1);
   }
 

@@ -1,6 +1,7 @@
 {
   "tier": "gold",
   "chances": 3,
+  "preview": "live",
   "order": 3,
   "entryOrder": [
     "DeepSeek-V4.1-Flash-1017.codex",

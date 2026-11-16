@@ -56,16 +56,17 @@
   （`max-age=600`），所以页面加载后还会用 `fetch` + `no-cache` 再校验一次，内容确实变了就整页重渲染。
   刚推上去的新实测因此不用等缓存过期，刷新即可看到。
 - **放大**：点预览弹出大图（同一份 HTML 再开一个 iframe 实时运行），带「在新标签页打开」，Esc 或点背景关闭。
-- **截图型实测**：实测文件夹里放了同名 png 时，卡片改显示这张截图，点击直接在新标签页打开 HTML（不跑 iframe、
-  也没有放大）。适合「打开就能玩」的小游戏这类不适合内嵌的页面，用 `node tools/snapshot.mjs <html> --webp` 生成截图。
+- **截图型实测**：`meta.json` 写 `"preview": "screenshot"` 后，每个正常实测都必须有同名 png/jpg/webp；
+  卡片显示截图，点击直接在新标签页打开 HTML（不跑 iframe、没有放大）。
+  适合「打开就能玩」的小游戏这类不适合内嵌的页面，用 `node tools/snapshot.mjs <html> --webp` 生成截图。
   WebP q85 的体积通常只有 PNG 的 10% 左右，肉眼几乎无差别，能明显加快图片加载。
 - **条目 = Model × Harness**：每个组合一个条目，标题形如 `DeepSeek-V4.1-Flash × WorkBuddy`；
   条目里并排放该组合的前 1~2 次效果（宽度够时一行显示），下方是这个组合的一句短评。
 - **首页与详情页**：首页每个赛题只展示 2 个条目，点「查看更多 →」进入 `/<项目英文名>/`；
   详情页展示全部条目，并带该赛题的规则、得分汇总和「模型 / Harness」模糊搜索。
 - **段位**：`<项目名>.meta.json` 的 `tier` / `chances` 决定项目卡上的段位徽章（青铜 / 白银 / 金牌）
-  和「只有 N 次机会」；超出 `chances` 的实测在生成数据时就被过滤掉，不会出现在页面上。
-- **指示灯**：每个效果只显示一颗彩色圆点，颜色来自 `meta.json` 的 `lights`。
+  和「只有 N 次机会」；超出 `chances` 的实测会直接导致构建失败。
+- **指示灯**：每个效果只显示一颗彩色圆点，颜色来自 `meta.json` 的 `lights`；缺失或非法颜色会直接导致构建失败。
 - **异常轮次**：实测文件夹里没有 html、只有同名 `.dump.txt` 时，卡片显示淡红底、深红字的异常原因（前两句），
   点击放大看全文，不提供「在新标签页打开」；同一组合连续两轮异常时，第三轮自动显示「视为放弃参赛」。
 - **黄金题**：`tier: "gold"` + `chances: 3`，按第 1 / 2 / 3 轮做对分别计 3 / 2 / 1 分；
@@ -100,8 +101,8 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
 | 文件 | 是否必需 | 显示位置 |
 | --- | --- | --- |
 | `<项目名>.prompt.txt` | 必需 | 项目卡片里的「查看原始 prompt」折叠区 |
-| `<项目名>.meta.json` | 可选 | 项目卡上的段位徽章、机会次数，以及每个效果的指示灯颜色 |
-| `<项目名>.reviews.json` | 可选 | 每个「Model × Harness」条目下方的短评 |
+| `<项目名>.meta.json` | 运行型项目必需 | 段位、机会次数、预览类型，以及每个效果的指示灯颜色 |
+| `<项目名>.reviews.json` | 运行型项目必需 | 每个「Model × Harness」条目下方的短评 |
 
 写法：
 
@@ -112,6 +113,7 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
   {
     "tier": "silver",
     "chances": 2,
+    "preview": "live",
     "order": 2,
     "entryOrder": ["deepseek-v41-flash.codex", "deepseek-v41-flash.workbuddy"],
     "lights": {
@@ -122,11 +124,13 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
   ```
 
   - `tier` 可选 `bronze` / `silver` / `gold`（显示为青铜 / 白银 / 金牌）；
-  - `chances` 是这条赛题允许的机会次数，超出的实测在生成时会被过滤掉；
+  - `chances` 是这条赛题允许的机会次数，超出会直接导致构建失败；
+  - `preview` 必须是 `live`（实时 iframe）或 `screenshot`（截图卡片）；
+    `screenshot` 项目中的每个正常实测都必须有同名截图；
   - `order` 决定赛题在页面上的先后（小的在前，不写就按文件夹名排）；
   - `entryOrder` 决定项目内「Model × Harness」条目的顺序，列出键即可，没列出的按名称排在后面；
   - `lights` 的键是「模型.harness.第几次」（也可以写完整文件夹名），值是 `green` / `red` / `yellow`；
-    没写颜色的效果不显示指示灯。
+    每个真实实测都必须有有效颜色。
 
 - `reviews.json` 是「每个 Model × Harness 的短评」，键是 `模型.harness`：
 
@@ -138,6 +142,17 @@ pelican-bicycle.deepseek-v41-flash.workbuddy.2
 
 - 用 `file://` 直接打开页面时浏览器不允许 `fetch`，会退回数据文件里的内容（和预览的限制一样）；
 - 页面上只展示文本内容，不显示文件路径。
+
+## 构建自检
+
+`node tools/build-index.mjs` 会在写入任何文件前统一检查；只要有一项失败，就以非零状态退出，
+不会生成 `data/projects.js` 或详情页：
+
+- 运行型项目：`preview` / `tier` / `chances`、prompt、meta、短评、指示灯、轮次上限；
+- 实测目录：命名、HTML / dump 二选一、文件名与目录同名；
+- 截图型项目：每个正常实测必须有同名且格式有效的 png/jpg/webp；
+- live 项目：不应出现截图文件；
+- 文字题：题目、模型 ID / 显示名、Harness、评分题号和 0/1/2 分数，以及空站位模型。
 
 ## 文字题（成绩单型）
 
