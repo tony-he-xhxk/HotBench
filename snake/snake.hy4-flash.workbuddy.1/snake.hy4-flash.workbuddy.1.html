@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>贪吃蛇</title>
+<style>
+  :root {
+    --bg: #e6f7f6;
+    --panel: #ffffff;
+    --ink: #233b39;
+    --muted: #6e8d89;
+    --accent: #2bb3a6;
+    --accent-dark: #1c8b81;
+    --board: #f4fbfa;
+    --grid: #e3f1ef;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    padding: 20px;
+  }
+  .wrap { width: min(92vw, 480px); }
+  h1 { margin: 0 0 12px; font-size: 24px; letter-spacing: 2px; }
+  .bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+    font-size: 15px;
+  }
+  .bar b { font-size: 22px; color: var(--accent-dark); }
+  .board-wrap {
+    position: relative;
+    background: var(--panel);
+    padding: 10px;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(43, 179, 166, 0.15);
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    background: var(--board);
+    touch-action: none;
+  }
+  .overlay {
+    position: absolute;
+    inset: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.88);
+    border-radius: 8px;
+    text-align: center;
+  }
+  .overlay.hidden { display: none; }
+  .overlay .big { font-size: 26px; font-weight: 700; }
+  .overlay .small { color: var(--muted); font-size: 14px; line-height: 1.7; }
+  button {
+    border: 0;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+  button:hover { background: var(--accent-dark); }
+  .hint { margin-top: 12px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>贪吃蛇</h1>
+  <div class="bar">
+    <span>得分 <b id="score">0</b></span>
+    <span>最高 <b id="best">0</b></span>
+  </div>
+  <div class="board-wrap">
+    <canvas id="game" width="460" height="460"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="big" id="msg">准备开始</div>
+      <div class="small" id="sub">方向键 / WASD 控制移动<br>空格暂停</div>
+      <button id="startBtn">开始游戏</button>
+    </div>
+  </div>
+  <div class="hint">手机可直接在画面上滑动控制方向。撞到墙壁或自己即结束。</div>
+</div>
+<script>
+(function () {
+  const CELL = 20, N = 23;
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const overlay = document.getElementById('overlay');
+  const msgEl = document.getElementById('msg');
+  const subEl = document.getElementById('sub');
+  const startBtn = document.getElementById('startBtn');
+
+  let snake, food, dir, nextDir, score, running, paused, over, timer;
+  let best = Number(localStorage.getItem('snake-best') || 0);
+  bestEl.textContent = best;
+
+  function stepSize() { return Math.max(65, 125 - Math.floor(score / 5) * 6); }
+
+  function placeFood() {
+    const free = [];
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        if (!snake.some(s => s.x === x && s.y === y)) free.push({ x, y });
+      }
+    }
+    food = free[Math.floor(Math.random() * free.length)];
+  }
+
+  function reset() {
+    snake = [{ x: 11, y: 12 }, { x: 10, y: 12 }, { x: 9, y: 12 }];
+    dir = { x: 1, y: 0 };
+    nextDir = dir;
+    score = 0;
+    scoreEl.textContent = 0;
+    over = false;
+    paused = false;
+    placeFood();
+    draw();
+  }
+
+  function start() {
+    clearInterval(timer);
+    reset();
+    running = true;
+    overlay.classList.add('hidden');
+    timer = setInterval(tick, stepSize());
+  }
+
+  function tick() {
+    if (paused || over) return;
+    dir = nextDir;
+    const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+    const hitWall = head.x < 0 || head.x >= N || head.y < 0 || head.y >= N;
+    const hitSelf = snake.some((s, i) => i < snake.length - 1 && s.x === head.x && s.y === head.y);
+    if (hitWall || hitSelf) { gameOver(); return; }
+
+    snake.unshift(head);
+    if (head.x === food.x && head.y === food.y) {
+      score++;
+      scoreEl.textContent = score;
+      if (score > best) {
+        best = score;
+        bestEl.textContent = best;
+        localStorage.setItem('snake-best', String(best));
+      }
+      placeFood();
+      clearInterval(timer);
+      timer = setInterval(tick, stepSize());
+    } else {
+      snake.pop();
+    }
+    draw();
+  }
+
+  function gameOver() {
+    over = true;
+    running = false;
+    clearInterval(timer);
+    msgEl.textContent = '游戏结束';
+    subEl.innerHTML = '本次得分 ' + score + '，最高 ' + best + '<br>再来一局？';
+    startBtn.textContent = '重新开始';
+    overlay.classList.remove('hidden');
+  }
+
+  function togglePause() {
+    if (!running || over) return;
+    paused = !paused;
+    if (paused) {
+      msgEl.textContent = '已暂停';
+      subEl.innerHTML = '本次得分 ' + score + '<br>按空格继续';
+      startBtn.textContent = '继续';
+      overlay.classList.remove('hidden');
+    } else {
+      overlay.classList.add('hidden');
+    }
+  }
+
+  function turn(x, y) {
+    if (x === -dir.x && y === -dir.y) return;
+    nextDir = { x, y };
+    if (!running && !over) start();
+  }
+
+  function draw() {
+    const w = canvas.width, c = w / N;
+    ctx.fillStyle = '#f4fbfa';
+    ctx.fillRect(0, 0, w, w);
+    ctx.strokeStyle = '#e3f1ef';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < N; i++) {
+      ctx.beginPath(); ctx.moveTo(i * c, 0); ctx.lineTo(i * c, w); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, i * c); ctx.lineTo(w, i * c); ctx.stroke();
+    }
+    ctx.fillStyle = '#ef6f6c';
+    ctx.beginPath();
+    ctx.arc(food.x * c + c / 2, food.y * c + c / 2, c * 0.34, 0, Math.PI * 2);
+    ctx.fill();
+    snake.forEach((s, i) => {
+      const head = i === 0;
+      ctx.fillStyle = head ? '#1c8b81' : (i % 2 ? '#35bdae' : '#2bb3a6');
+      const pad = head ? 1 : 2;
+      const r = 5;
+      const x = s.x * c + pad, y = s.y * c + pad, sz = c - pad * 2;
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(x, y, sz, sz, r) : ctx.rect(x, y, sz, sz);
+      ctx.fill();
+      if (head) {
+        ctx.fillStyle = '#fff';
+        const ex = dir.x, ey = dir.y;
+        ctx.beginPath();
+        ctx.arc(x + sz / 2 + ex * 4 - ey * 4, y + sz / 2 + ey * 4 - ex * 4, 1.8, 0, Math.PI * 2);
+        ctx.arc(x + sz / 2 + ex * 4 + ey * 4, y + sz / 2 + ey * 4 + ex * 4, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+  }
+
+  const keys = {
+    ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
+    w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0],
+    W: [0, -1], S: [0, 1], A: [-1, 0], D: [1, 0]
+  };
+  document.addEventListener('keydown', e => {
+    if (keys[e.key]) {
+      e.preventDefault();
+      turn(keys[e.key][0], keys[e.key][1]);
+    } else if (e.code === 'Space') {
+      e.preventDefault();
+      if (paused) { paused = false; overlay.classList.add('hidden'); startBtn.textContent = '重新开始'; }
+      else togglePause();
+    } else if (e.key === 'Enter' && (!running || over)) {
+      start();
+    }
+  });
+
+  startBtn.addEventListener('click', () => {
+    if (paused) { paused = false; overlay.classList.add('hidden'); startBtn.textContent = '重新开始'; }
+    else start();
+  });
+
+  let touchStart = null;
+  canvas.addEventListener('touchstart', e => {
+    const t = e.changedTouches[0];
+    touchStart = { x: t.clientX, y: t.clientY };
+  }, { passive: true });
+  canvas.addEventListener('touchend', e => {
+    if (!touchStart) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStart.x, dy = t.clientY - touchStart.y;
+    touchStart = null;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
+    if (Math.abs(dx) > Math.abs(dy)) turn(dx > 0 ? 1 : -1, 0);
+    else turn(0, dy > 0 ? 1 : -1);
+  }, { passive: true });
+
+  reset();
+})();
+</script>
+</body>
+</html>

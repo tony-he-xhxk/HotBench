@@ -20,7 +20,8 @@ window.HOTBENCH_DATA = {
       "mimo-v2.6-pro": "MiMo-V2.6-Pro",
       "DeepSeek-V4.1-Flash-1017": "DeepSeek-V4.1-Flash-1017",
       "MiniMax-M3.1-Flash": "MiniMax-M3.1-Flash",
-      "Hy4": "Hy4"
+      "Hy4": "Hy4",
+      "hy4-flash": "Hy4 flash"
     },
     "harnesses": {
       "codex": "Codex",
@@ -52,6 +53,7 @@ window.HOTBENCH_DATA = {
         "glm-5.3-flash.workbuddy",
         "glm-5.3-flash.trae-cn",
         "hy4-preview.workbuddy",
+        "hy4-flash.workbuddy",
         "space-bunny.workbuddy",
         "mimo-v2.6-pro.workbuddy",
         "mimo-v2.6-pro.trae-cn",
@@ -72,6 +74,7 @@ window.HOTBENCH_DATA = {
         "glm-5.3-flash.trae-cn": "逻辑基本正确，但是未做移动端适配，移动端滑动无响应。",
         "hy4-preview.workbuddy": "逻辑正确，没有延迟，有一个小瑕疵：蛇的两个眼睛竟然是一前一后的。",
         "Hy4.workbuddy": "一轮通过，逻辑正确，没有明显问题。",
+        "hy4-flash.workbuddy": "一轮通过，逻辑正确，没有延迟",
         "space-bunny.workbuddy": "一轮通过、没有延迟，交付速度也是最快的；但蛇没有眼睛，蛇身用格子染色，UI 明显偷懒。",
         "step-5-preview.workbuddy": "逻辑正确、没有延迟，但一进页面就零帧起手、蛇直接撞墙；吃豆加速 5 次后快到无法微操，体验极差。移动端显示不全。",
         "step-5-preview.trae-cn": "逻辑正确、没有延迟，但移动端窗口无法动态适配，导致虽然滑动可以显示全，但是页面滑动与游玩时滑动逻辑冲突，并且蛇可能跑出视口。",
@@ -168,6 +171,14 @@ window.HOTBENCH_DATA = {
           "tone": "green"
         },
         {
+          "id": "hy4-flash.workbuddy.1",
+          "model": "hy4-flash",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "snake/snake.hy4-flash.workbuddy.1/snake.hy4-flash.workbuddy.1.html",
+          "tone": "green"
+        },
+        {
           "id": "hy4-preview.workbuddy.1",
           "model": "hy4-preview",
           "harness": "workbuddy",
@@ -258,6 +269,7 @@ window.HOTBENCH_DATA = {
         "glm-5.3-flash.trae-cn": "第 1 轮腿与身体脱节，远侧腿在某时刻会因为长度而伸直，不符合逻辑，背景的树木跳变；第 2 轮修复完毕。",
         "hy4-preview.workbuddy": "第 1 轮完全崩坏，头、尾翼全飞到左上角，膝盖向后弯，还多了个碍眼的骑行水壶；第 2 轮修复完毕，但是真的感觉超级丑。",
         "Hy4.workbuddy": "第 1 轮翅膀太短，只用脚骑车不现实，远侧腿在某时刻会因为长度而伸直，不符合逻辑，马路虚线移动方向错误，远端腿与车架遮挡关系不对；第 2 轮修复完毕。",
+        "hy4-flash.workbuddy": "第 1 轮双腿与身体微分离，远侧腿与车架遮挡关系不对，第 2 轮修复。",
         "space-bunny.workbuddy": "两次机会内没修好：第 1 轮背景（山、树、路虚线）会跳变，第 2 轮路肩又跳变。",
         "step-5-preview.workbuddy": "两次机会都没过：第 1 轮腿像纸片一样翻转，第 2 轮画蛇添足把两条腿连成了橙色三角形。",
         "step-5-preview.trae-cn": "第 1 轮因为思考过程超出长度被Harness异常打断，第 2 轮写了文件，但是踏板与踏板转轴脱节（转动速度不同），鹈鹕翅膀过短，背景树木会突然出现，不通过。",
@@ -390,6 +402,22 @@ window.HOTBENCH_DATA = {
           "harness": "workbuddy",
           "attempt": 2,
           "file": "pelican-bicycle/pelican-bicycle.Hy4.workbuddy.2/pelican-bicycle.Hy4.workbuddy.2.html",
+          "tone": "green"
+        },
+        {
+          "id": "hy4-flash.workbuddy.1",
+          "model": "hy4-flash",
+          "harness": "workbuddy",
+          "attempt": 1,
+          "file": "pelican-bicycle/pelican-bicycle.hy4-flash.workbuddy.1/pelican-bicycle.hy4-flash.workbuddy.1.html",
+          "tone": "red"
+        },
+        {
+          "id": "hy4-flash.workbuddy.2",
+          "model": "hy4-flash",
+          "harness": "workbuddy",
+          "attempt": 2,
+          "file": "pelican-bicycle/pelican-bicycle.hy4-flash.workbuddy.2/pelican-bicycle.hy4-flash.workbuddy.2.html",
           "tone": "green"
         },
         {
@@ -682,6 +710,11 @@ window.HOTBENCH_DATA = {
           "id": "step-5-preview",
           "name": "Step-5-Preview",
           "harness": "workbuddy"
+        },
+        {
+          "id": "hy4-flash",
+          "name": "Hy4 flash",
+          "harness": "workbuddy"
         }
       ],
       "scores": {
@@ -693,7 +726,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "2": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -703,7 +737,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 1
+          "step-5-preview": 1,
+          "hy4-flash": 2
         },
         "3": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -713,7 +748,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 0,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "4": {
           "DeepSeek-V4.1-Flash-1017": 1,
@@ -723,7 +759,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 0,
           "mimo-v2.6-pro": 2,
           "space-bunny": 0,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 1
         },
         "5": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -733,7 +770,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "6": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -743,7 +781,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 0,
           "mimo-v2.6-pro": 2,
           "space-bunny": 0,
-          "step-5-preview": 0
+          "step-5-preview": 0,
+          "hy4-flash": 2
         },
         "7": {
           "DeepSeek-V4.1-Flash-1017": 1,
@@ -753,7 +792,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 0,
-          "step-5-preview": 0
+          "step-5-preview": 0,
+          "hy4-flash": 2
         },
         "8": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -763,7 +803,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "9": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -773,7 +814,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 0,
-          "step-5-preview": 0
+          "step-5-preview": 0,
+          "hy4-flash": 2
         },
         "10": {
           "DeepSeek-V4.1-Flash-1017": 0,
@@ -783,7 +825,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 0,
           "mimo-v2.6-pro": 0,
           "space-bunny": 0,
-          "step-5-preview": 0
+          "step-5-preview": 0,
+          "hy4-flash": 0
         },
         "11": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -793,7 +836,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "12": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -803,7 +847,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 1
+          "step-5-preview": 1,
+          "hy4-flash": 2
         },
         "13": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -813,7 +858,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "14": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -823,7 +869,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "15": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -833,7 +880,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "16": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -843,7 +891,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 0,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "17": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -853,7 +902,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "18": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -863,7 +913,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "19": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -873,7 +924,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 1,
           "mimo-v2.6-pro": 1,
           "space-bunny": 1,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "20": {
           "DeepSeek-V4.1-Flash-1017": 1,
@@ -883,7 +935,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 1
         },
         "21": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -893,7 +946,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 0,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "22": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -903,7 +957,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "23": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -913,7 +968,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "24": {
           "DeepSeek-V4.1-Flash-1017": 0,
@@ -923,7 +979,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 0,
           "mimo-v2.6-pro": 0,
           "space-bunny": 2,
-          "step-5-preview": 0
+          "step-5-preview": 0,
+          "hy4-flash": 2
         },
         "25": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -933,7 +990,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "26": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -943,7 +1001,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 0,
-          "step-5-preview": 0
+          "step-5-preview": 0,
+          "hy4-flash": 0
         },
         "27": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -953,7 +1012,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 0
         },
         "28": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -963,7 +1023,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         },
         "29": {
           "DeepSeek-V4.1-Flash-1017": 0,
@@ -973,7 +1034,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 0,
           "mimo-v2.6-pro": 0,
           "space-bunny": 0,
-          "step-5-preview": 0
+          "step-5-preview": 0,
+          "hy4-flash": 0
         },
         "30": {
           "DeepSeek-V4.1-Flash-1017": 2,
@@ -983,7 +1045,8 @@ window.HOTBENCH_DATA = {
           "glm-5.3-flash": 2,
           "mimo-v2.6-pro": 2,
           "space-bunny": 2,
-          "step-5-preview": 2
+          "step-5-preview": 2,
+          "hy4-flash": 2
         }
       },
       "resultsUrl": "feihua-wenxue/feihua-wenxue.results.json"

@@ -6,8 +6,13 @@
      node tools/add-text-score.mjs
      node tools/add-text-score.mjs --file feihua-wenxue/feihua-wenxue.results.json
 
+   字段约定：
+     - 网页显示名（name）：网站原样显示的官方名称，可含大小写、空格和短横线；
+     - 本地模型 ID（id）：小写 slug，用作 JSON 评分键和实测文件夹名，不含空格和点；
+     - Harness 本地 ID（harness）：运行环境的小写标识，例如 workbuddy、codex。
+
    流程：
-     1. 选择本次实测的模型（输入编号，或模型 id / 显示名）；
+     1. 从编号列表选择模型；输入 0 进入新增模型流程；
      2. 输入「0 分（跑偏）」的题号，逗号分隔，可留空；
      3. 输入「1 分（部分解释）」的题号，逗号分隔，可留空；
      4. 其余题目默认记 2 分（完整解释）；
@@ -77,6 +82,12 @@ function fail(message) {
   process.exit(1);
 }
 
+function quit(message) {
+  console.log(message);
+  rl.close();
+  process.exit(0);
+}
+
 function parseQuestionNumbers(text) {
   const values = String(text || '')
     .split(/[,，、\s]+/)
@@ -88,6 +99,20 @@ function parseQuestionNumbers(text) {
     return null;
   }
   return [...new Set(values)].sort((a, b) => a - b);
+}
+
+function slugifyModelId(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[.\s_]+/g, '-')
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function validModelId(value) {
+  return /^[a-z0-9][a-z0-9-]*$/.test(String(value || ''));
 }
 
 function findModel(input) {
@@ -103,6 +128,106 @@ function findModel(input) {
   return results.models.find((model) =>
     String(model.id).toLowerCase() === lower || String(model.name).toLowerCase() === lower
   ) || null;
+}
+
+function printModels() {
+  console.log('\n可用模型：');
+  console.log('  网页显示名只影响网站；本地 ID 用于 JSON 和本地文件夹。');
+  console.log('  新建模型时本地 ID 必须为小写；已有历史 ID 保持原样，避免破坏旧评分。');
+  results.models.forEach((model, index) => {
+    const summary = questionIdsOf(model.id);
+    console.log('\n  [' + (index + 1) + '] 网页显示：' + model.name);
+    console.log('      本地 ID：' + model.id + ' | Harness：' + model.harness +
+      ' | 已评 ' + summary.filled + ' / ' + questionCount + ' 题');
+  });
+  console.log('\n  [0] 新增模型');
+  console.log('  [q] 退出');
+}
+
+async function createModel() {
+  console.log('\n新增模型（这里只登记模型，不会立刻写入文件）：');
+  console.log('  网页显示名会原样出现在网站上，例如：DeepSeek-V4.1-Flash。');
+  console.log('  本地 ID 会自动转成小写，用于 JSON 评分键和本地文件夹命名。');
+  console.log('  例：网页显示名「Hy4-Flash」→ 本地 ID「hy4-flash」。\n');
+
+  let name = '';
+  while (!name) {
+    name = (await ask('网页显示名（网站原样显示）：')).trim();
+    if (!name) console.log('  网页显示名不能为空。');
+  }
+
+  const duplicateName = results.models.find(
+    (model) => String(model.name).trim().toLowerCase() === name.toLowerCase()
+  );
+  if (duplicateName) {
+    console.log('  该网页显示名已经存在，本地 ID 为：' + duplicateName.id);
+    return duplicateName;
+  }
+
+  const suggestedId = slugifyModelId(name);
+  if (suggestedId) console.log('  建议的本地 ID：' + suggestedId);
+
+  let id = '';
+  while (!id) {
+    const entered = (await ask('本地 ID（只允许小写字母、数字、短横线，回车用建议值）：'))
+      .trim();
+    id = slugifyModelId(entered || suggestedId);
+    if (!validModelId(id)) {
+      console.log('  本地 ID 不合法，请输入英文字母或数字开头的小写 slug。');
+      id = '';
+      continue;
+    }
+    if (id !== (entered || suggestedId)) {
+      console.log('  已规范为：' + id);
+    }
+    const duplicateId = results.models.find(
+      (model) => String(model.id).toLowerCase() === id.toLowerCase()
+    );
+    if (duplicateId) {
+      console.log('  该本地 ID 已经存在，网页显示名为：' + duplicateId.name);
+      id = '';
+    }
+  }
+
+  const harnessInput = (await ask('Harness 本地 ID（回车 workbuddy）：')).trim();
+  const harness = slugifyModelId(harnessInput || 'workbuddy') || 'workbuddy';
+  const model = { id: id, name: name, harness: harness };
+
+  console.log('\n新模型预览：');
+  console.log('  网站会显示：' + model.name);
+  console.log('  JSON / 文件夹使用：' + model.id);
+  console.log('  Harness：' + model.harness);
+
+  return model;
+}
+
+async function chooseModel() {
+  printModels();
+  while (true) {
+    const input = (await ask(
+      '\n输入模型编号（推荐），也可输入本地 ID / 网页显示名；0 新增，q 退出：'
+    )).trim();
+
+    if (input.toLowerCase() === 'q') quit('已退出，未写入任何数据。');
+    if (!input) {
+      console.log('\n没有输入选择，请重新选择。');
+      continue;
+    }
+    if (input === '0') {
+      const model = await createModel();
+      if (!results.models.includes(model)) {
+        results.models.push(model);
+        console.log('已登记新模型；评分写入成功后才会保存到 JSON。');
+      }
+      return model;
+    }
+
+    const model = findModel(input);
+    if (model) return model;
+
+    console.log('\n没有匹配到「' + input + '」。');
+    console.log('如果这是新模型，请输入 0；否则请从上面的编号重新选择，或输入 q 退出。');
+  }
 }
 
 function questionIdsOf(modelId) {
@@ -126,23 +251,7 @@ function questionIdsOf(modelId) {
 }
 
 try {
-  console.log('\n可用模型：');
-  results.models.forEach((model, index) => {
-    console.log('  [' + (index + 1) + '] ' + model.name + '  (' + model.id + ' × ' + model.harness + ')');
-  });
-
-  let model = findModel(await ask('\n选择模型（编号 / id / 显示名，q 退出）：'));
-  if (!model) {
-    const id = (await ask('未找到该模型。输入要新增的模型 id（回车放弃）：')).trim();
-    if (!id) fail('已放弃。');
-
-    const name = (await ask('显示名（回车用 id）：')).trim() || id;
-    const harness = (await ask('Harness（回车 workbuddy）：')).trim() || 'workbuddy';
-
-    model = { id: id, name: name, harness: harness };
-    results.models.push(model);
-    console.log('已新增模型：' + name + ' × ' + harness);
-  }
+  const model = await chooseModel();
 
   const zeroText = await ask('\n0 分（跑偏）的题号，逗号分隔（可留空）：');
   const zeroPoints = parseQuestionNumbers(zeroText);
@@ -164,7 +273,9 @@ try {
   }
 
   console.log('\n本次批次：');
-  console.log('  模型：' + model.name + ' × ' + model.harness);
+  console.log('  网页显示名：' + model.name);
+  console.log('  本地模型 ID：' + model.id);
+  console.log('  Harness：' + model.harness);
   console.log('  0 分：' + (zeroPoints.join(', ') || '（无）'));
   console.log('  1 分：' + (onePoints.join(', ') || '（无）'));
   console.log('  2 分：其余 ' + (questionCount - zeroPoints.length - onePoints.length) + ' 题');

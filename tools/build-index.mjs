@@ -263,6 +263,15 @@ function scan() {
         /* 未参加、或完全没有有效评分的候选模型，不写入页面的参赛模型列表。 */
         const models = rawModels.filter((model) => scoredModelIds.has(model.id));
 
+        /* 文字题里的官方网页显示名可复用到运行型实测。
+           只替换「仍等于本地 ID」的自动标签，不覆盖人工修改过的显示名。 */
+        models.forEach((model) => {
+          const id = String(model.id || '').trim();
+          const name = String(model.name || '').trim();
+          if (!id || !name) return;
+          if (!modelLabels[id] || modelLabels[id] === id) modelLabels[id] = name;
+        });
+
         const instruction = promptFile
           ? readFileSync(promptFile, 'utf8').trim()
           : String(old.prompt || '').trim();
